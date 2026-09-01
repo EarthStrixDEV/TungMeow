@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Plus } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 import Card from "../components/ui/Card";
 import Spinner from "../components/ui/Spinner";
 import { dataService } from "../data";
@@ -30,6 +30,11 @@ export default function TransactionsPage() {
   /** Desktop: current page only. Mobile: accumulated pages (infinite scroll). */
   const [items, setItems] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  /** Bumped on manual refresh to re-trigger the fetch effect below. */
+  const [refreshKey, setRefreshKey] = useState(0);
+  /** id of the row currently being deleted, so only that row's button disables. */
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Active account from ?account=; falls back to the first account.
   const paramId = searchParams.get("account");
@@ -72,17 +77,43 @@ export default function TransactionsPage() {
           isDesktop || res.page === 1 ? res.items : [...prev, ...res.items],
         );
         setLoading(false);
+        setRefreshing(false);
       });
     return () => {
       cancelled = true;
     };
-  }, [activeId, search, typeFilter, categoryFilter, page, isDesktop]);
+  }, [activeId, search, typeFilter, categoryFilter, page, isDesktop, refreshKey]);
 
   const selectAccount = (id: string) => {
     setSearchParams({ account: id }, { replace: true });
   };
 
   const loadMore = useCallback(() => setPage((p) => p + 1), []);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await dataService.syncNow(); // bypasses the 60s server cache (spec §5)
+    setPage(1);
+    setItems([]);
+    setRefreshKey((k) => k + 1); // re-triggers the fetch effect above, which clears `refreshing`
+  }, []);
+
+  const handleDelete = useCallback(async (id: string) => {
+    if (!window.confirm("Delete this transaction? This can't be undone.")) return;
+    setDeletingId(id);
+    try {
+      await dataService.deleteTransaction(id);
+      // Deleting shifts every other transaction's row-based id in that account,
+      // so refetch the full list rather than filtering state locally.
+      setPage(1);
+      setItems([]);
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      window.alert("Failed to delete: " + (err instanceof Error ? err.message : "unknown error"));
+    } finally {
+      setDeletingId(null);
+    }
+  }, []);
 
   const hasMore = result !== null && result.page < result.pageCount;
   const empty = result !== null && result.total === 0 && !loading;
@@ -126,26 +157,40 @@ export default function TransactionsPage() {
                   </span>
                 )}
               </div>
-              <FilterBar
-                search={searchInput}
-                onSearchChange={setSearchInput}
-                type={typeFilter}
-                onTypeChange={setTypeFilter}
-                category={categoryFilter}
-                onCategoryChange={setCategoryFilter}
-              />
+              <div className="flex items-center gap-2">
+                <FilterBar
+                  search={searchInput}
+                  onSearchChange={setSearchInput}
+                  type={typeFilter}
+                  onTypeChange={setTypeFilter}
+                  category={categoryFilter}
+                  onCategoryChange={setCategoryFilter}
+                />
+                <button
+                  type="button"
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  aria-label="Refresh transactions"
+                  title="Refresh"
+                  className="flex items-center justify-center shrink-0 bg-hover border border-line rounded-input p-2 text-ink disabled:opacity-60"
+                >
+                  <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
+                </button>
+              </div>
             </div>
 
             {empty ? (
               <p className="py-12 text-center text-sm text-ink-soft">No transactions found</p>
             ) : (
               <>
-                <TransactionTable items={items} />
+                <TransactionTable items={items} onDelete={handleDelete} deletingId={deletingId} />
                 <TransactionCardList
                   items={items}
                   hasMore={hasMore}
                   loading={loading}
                   onLoadMore={loadMore}
+                  onDelete={handleDelete}
+                  deletingId={deletingId}
                 />
               </>
             )}

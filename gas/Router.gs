@@ -74,6 +74,15 @@ var Router = {
             }),
           };
 
+        case "deleteTransaction":
+          // Sent via GET query string like every other action. params.id is the
+          // full "{sheetTabName}:{rowNumber}" transaction id; SheetService parses
+          // it via Utils.parseTransactionId. Real row deletion — every other
+          // transaction's id in that tab may shift, so there's nothing to return
+          // beyond a bare success signal.
+          SheetService.deleteTransaction(params.id);
+          return { ok: true, data: null };
+
         case "getDashboardStats":
           return {
             ok: true,

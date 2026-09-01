@@ -223,6 +223,12 @@ Backend นี้ deploy แบบ **Anyone** เข้าถึงได้ (ac
 
 ---
 
+## อัปเดตโค้ด: เพิ่ม deleteTransaction
+
+รอบนี้มีไฟล์ `.gs` เปลี่ยน 2 ไฟล์: `SheetService.gs` และ `Router.gs` (เพิ่มฟังก์ชันลบรายการธุรกรรม) เปิด Apps Script editor ที่ผูกกับ Sheet เดิม แล้วแทนที่เนื้อหาทั้งหมดของไฟล์ `SheetService.gs` และ `Router.gs` ในนั้นด้วยเนื้อหาล่าสุดจาก `D:\My Second Brain\Project Dev\MeowTung\gas\SheetService.gs` และ `D:\My Second Brain\Project Dev\MeowTung\gas\Router.gs` บนเครื่องพี่เอิร์ธ (ไฟล์อื่นไม่ต้องแตะ) บันทึกด้วย Ctrl+S แล้ว **redeploy ตามขั้นตอน "New version" ที่อธิบายไว้ในกล่องคำเตือนท้ายข้อ 6 ด้านบน** — ไม่ต้องสร้าง deployment ใหม่ URL เดิมใช้ได้ต่อค่ะ
+
+---
+
 ## 8. ขั้นตอนต่อไป (ส่งต่อให้ทีม)
 
 พอ smoke test ผ่านแล้ว พี่เอิร์ธจะมีค่า 2 ตัวพร้อมใช้: **Web App URL** (ลงท้าย `/exec`) และ **API_TOKEN** ค่าทั้งสองนี้ต้องถูกนำไปใส่ในไฟล์ `app/.env.local` เป็น `VITE_APPS_SCRIPT_URL` และ `VITE_APPS_SCRIPT_TOKEN` — ขั้นตอนการสร้างไฟล์นี้และเชื่อมต่อฝั่ง frontend จะเป็นงานของเบล (ทีม frontend adapter) แยกต่างหาก พี่เอิร์ธแค่เตรียมค่าทั้งสองนี้ไว้ให้พร้อมส่งต่อ หรือถ้าอยากวางในไฟล์เองเลยก็ทำได้เช่นกันค่ะ

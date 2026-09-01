@@ -1,3 +1,4 @@
+import { Trash2 } from "lucide-react";
 import AmountText from "../../components/ui/AmountText";
 import CategoryTag from "../../components/ui/CategoryTag";
 import type { Transaction } from "../../data";
@@ -5,12 +6,14 @@ import { formatDate } from "../../lib/format";
 
 interface TransactionTableProps {
   items: Transaction[];
+  onDelete: (id: string) => void;
+  deletingId: string | null;
 }
 
 const TH = "text-left uppercase text-[11.5px] font-extrabold tracking-[0.03em] text-ink-soft px-2 pb-[10px]";
 const TD = "py-[12px] px-2 border-t border-line text-[13.5px]";
 
-export default function TransactionTable({ items }: TransactionTableProps) {
+export default function TransactionTable({ items, onDelete, deletingId }: TransactionTableProps) {
   return (
     <table className="hidden desktop:table w-full border-collapse">
       <thead>
@@ -20,6 +23,9 @@ export default function TransactionTable({ items }: TransactionTableProps) {
           <th className={TH}>Category</th>
           <th className={TH}>Type</th>
           <th className={`${TH} text-right`}>Amount</th>
+          <th className={TH}>
+            <span className="sr-only">Actions</span>
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -41,6 +47,18 @@ export default function TransactionTable({ items }: TransactionTableProps) {
               </td>
               <td className={`${TD} text-right whitespace-nowrap`}>
                 <AmountText amount={t.amount} type={t.type} />
+              </td>
+              <td className={`${TD} text-right whitespace-nowrap`}>
+                <button
+                  type="button"
+                  onClick={() => onDelete(t.id)}
+                  disabled={deletingId === t.id}
+                  aria-label="Delete transaction"
+                  title="Delete"
+                  className="text-ink-faint hover:text-red disabled:opacity-40 disabled:hover:text-ink-faint"
+                >
+                  <Trash2 size={16} />
+                </button>
               </td>
             </tr>
           );

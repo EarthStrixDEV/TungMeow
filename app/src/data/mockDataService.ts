@@ -162,6 +162,34 @@ export const mockDataService: DataService = {
     return { ...transaction };
   },
 
+  async deleteTransaction(id: string) {
+    await ensureInit();
+    await delay(WRITE_DELAY_MS);
+    const s = requireStore();
+    const index = s.transactions.findIndex((t) => t.id === id);
+    if (index === -1) throw new Error(`Transaction not found: ${id}`);
+
+    const deleted = s.transactions[index];
+    const deletedRow = rowNumber(deleted.id);
+    const account = s.accounts.find((a) => a.id === deleted.accountId);
+    if (!account) throw new Error(`Unknown account: ${deleted.accountId}`);
+
+    // Real Sheets deleteRow() shifts every row below the deleted one up by
+    // one — mirror that here so every other transaction's id in this account
+    // stays consistent with what a real backend would report on refetch.
+    s.transactions = s.transactions
+      .filter((t) => t.id !== id)
+      .map((t) => {
+        if (t.accountId !== deleted.accountId) return t;
+        const r = rowNumber(t.id);
+        return r > deletedRow ? { ...t, id: `${account.sheetTabName}:${r - 1}` } : t;
+      });
+
+    // The tab's next-free-row counter must also shrink by one to match.
+    const nextRow = s.nextRowByTab.get(account.sheetTabName);
+    if (nextRow !== undefined) s.nextRowByTab.set(account.sheetTabName, nextRow - 1);
+  },
+
   async getDashboardStats(period: Period): Promise<DashboardStats> {
     await ensureInit();
     await delay(READ_DELAY_MS);

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { Trash2 } from "lucide-react";
 import AmountText from "../../components/ui/AmountText";
 import CategoryIcon from "../../components/ui/CategoryIcon";
 import Spinner from "../../components/ui/Spinner";
@@ -11,6 +12,8 @@ interface TransactionCardListProps {
   hasMore: boolean;
   loading: boolean;
   onLoadMore: () => void;
+  onDelete: (id: string) => void;
+  deletingId: string | null;
 }
 
 export default function TransactionCardList({
@@ -18,6 +21,8 @@ export default function TransactionCardList({
   hasMore,
   loading,
   onLoadMore,
+  onDelete,
+  deletingId,
 }: TransactionCardListProps) {
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -49,8 +54,20 @@ export default function TransactionCardList({
               {formatDate(t.date)} · {t.category}
             </p>
           </div>
-          <div className="shrink-0 text-[13.5px]">
-            <AmountText amount={t.amount} type={t.type} />
+          <div className="flex shrink-0 items-center gap-2">
+            <div className="text-[13.5px]">
+              <AmountText amount={t.amount} type={t.type} />
+            </div>
+            <button
+              type="button"
+              onClick={() => onDelete(t.id)}
+              disabled={deletingId === t.id}
+              aria-label="Delete transaction"
+              title="Delete"
+              className="shrink-0 text-ink-faint hover:text-red disabled:opacity-40 disabled:hover:text-ink-faint"
+            >
+              <Trash2 size={16} />
+            </button>
           </div>
         </div>
       ))}

@@ -25,6 +25,12 @@ export interface DataService {
   listTransactions(accountId: string, q?: TransactionQuery): Promise<TransactionPage>;
   listRecentTransactions(limit: number): Promise<(Transaction & { accountName: string })[]>;
   addTransaction(input: Omit<Transaction, "id" | "pending">): Promise<Transaction>;
+  /**
+   * Deletes a real Sheet row (not a soft-delete) — every other transaction's
+   * id in that account may have shifted afterward. Callers MUST refetch the
+   * transaction list; do not patch state locally by filtering out just this id.
+   */
+  deleteTransaction(id: string): Promise<void>;
   getDashboardStats(period: Period): Promise<DashboardStats>;
   getConnectionInfo(): Promise<ConnectionInfo>;
   syncNow(): Promise<ConnectionInfo>;

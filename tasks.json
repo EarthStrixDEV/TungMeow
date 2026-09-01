@@ -13,12 +13,22 @@
     { "id": 9, "title": "AddEntryPage.tsx error banner on save failure", "owner": "Bell", "status": "done", "deps": [8] },
     { "id": 10, "title": "Write exact copy-paste deployment guide for P'Earth (manual browser steps)", "owner": "Ploy", "status": "done", "deps": [7] },
     { "id": 11, "title": "QA: tsc/build clean, review .gs logic against mock reference, review deployment doc completeness", "owner": "Prae", "status": "done", "deps": [8, 9, 10] },
-    { "id": 12, "title": "Security audit: token handling, exposure risk documentation, injection/validation on inputs", "owner": "Bow", "status": "done", "deps": [11] }
+    { "id": 12, "title": "Security audit: token handling, exposure risk documentation, injection/validation on inputs", "owner": "Bow", "status": "done", "deps": [11] },
+    { "id": 13, "title": "Round 2 — Refresh button on Transactions page (calls syncNow + refetch current view)", "owner": "Bell", "status": "done", "deps": [] },
+    { "id": 14, "title": "Round 2 — deleteTransaction: add to DataService/types contract (mock + live + backend .gs) + wire to a real Sheet deleteRow()", "owner": "Noon", "status": "done", "deps": [] },
+    { "id": 15, "title": "Round 2 — deleteTransaction: mockDataService implementation", "owner": "Maidlin", "status": "done", "deps": [14] },
+    { "id": 16, "title": "Round 2 — deleteTransaction: SheetService.gs deleteRow() + cache invalidation + redeploy note", "owner": "Jane", "status": "done", "deps": [14] },
+    { "id": 17, "title": "Round 2 — Frontend: delete button + confirm dialog in TransactionTable/TransactionCardList, refetch after delete", "owner": "Bell", "status": "done", "deps": [14, 15] },
+    { "id": 18, "title": "Round 2 — QA: tsc/build, verify refresh + delete against mock, review deleteTransaction .gs logic", "owner": "Prae", "status": "done", "deps": [13, 16, 17] }
   ],
   "findings": [
     "Round 1: Router.gs initially designed addTransaction as POST — corrected to GET-only before other agents built on top (per CORS strategy).",
     "Security audit: 3 findings (Sheets formula injection, missing input validation on addTransaction, no rate-limiting documented) — all fixed/documented and re-verified RESOLVED by โบว์ on 2026-09-01. Backend cleared for deployment from a security standpoint.",
     "QA: 2 minor items (mock/live toggle intentionally deviates from literal plan wording for better DX, deployment doc file-count typo) — toggle kept as-is (justified), typo fixed.",
-    "Residual observation (non-blocking): addTransaction's `date` field has no format validation server-side — flagged by โบว์ as a possible future minor finding, not required for this round."
+    "Residual observation (non-blocking): addTransaction's `date` field has no format validation server-side — flagged by โบว์ as a possible future minor finding, not required for this round.",
+    "Deployed to production: https://tungmeow.vercel.app (Vercel, connected to EarthStrixDEV/TungMeow GitHub repo, auto-deploys on push to main) + live Apps Script backend, verified cross-origin working with zero CORS issues on 2026-09-01.",
+    "Round 2 (2026-09-01): P'Earth requested Refresh button + Delete row — both explicit scope expansions beyond MVP spec §7.2/§14 (\"MVP explicitly excludes editing or deleting a row\"), confirmed and approved by P'Earth before starting. Delete uses real Sheets deleteRow() (not soft-delete) — every row-number-based id downstream of a delete is invalidated, so the frontend must always refetch the full list after a successful delete rather than optimistically removing just one row locally.",
+    "Round 2 QA: 1 minor finding (delete button not disabled during its own pending request, theoretical double-click race on real backend) — fixed via per-row deletingId state, re-verified RESOLVED by แพร on 2026-09-01. IMPORTANT tooling note: bare `npx tsc --noEmit` (no -p flag) silently checks nothing in this project — root tsconfig.json is references-only; always use `npx tsc --noEmit -p tsconfig.app.json` or `npm run build`.",
+    "Round 2 code changes not yet redeployed: gas/SheetService.gs and gas/Router.gs were updated locally (deleteTransaction) but the LIVE Apps Script Web App at production still runs the pre-Round-2 version until P'Earth manually re-pastes both files into the Apps Script editor and redeploys a New version (see gas/DEPLOYMENT.md's new section). Frontend on Vercel auto-deployed via git push already includes Round 2 UI, but delete/refresh against the LIVE sheet won't work until the backend redeploy happens."
   ]
 }

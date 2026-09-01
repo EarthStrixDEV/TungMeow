@@ -16,8 +16,9 @@ import type {
  * logic lives here (that's all in SheetService.gs on the backend).
  *
  * Transport: GET + query string for every action, including writes
- * (`addTransaction`, `syncNow`). Deliberate CORS-avoidance decision — see
- * gas/Router.gs's header comment for the full rationale.
+ * (`addTransaction`, `deleteTransaction`, `syncNow`). Deliberate
+ * CORS-avoidance decision — see gas/Router.gs's header comment for the full
+ * rationale.
  */
 
 const BASE_URL = import.meta.env.VITE_APPS_SCRIPT_URL as string;
@@ -88,6 +89,10 @@ export const appsScriptDataService: DataService = {
       amount: input.amount,
       note: input.note,
     });
+  },
+
+  deleteTransaction(id: string) {
+    return call<void>("deleteTransaction", { id });
   },
 
   getDashboardStats(period: Period) {

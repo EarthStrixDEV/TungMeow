@@ -371,6 +371,39 @@ var SheetService = {
   },
 
   /**
+   * Deletes one transaction row from its account's tab (real deletion, not a
+   * soft-delete — spec deviation approved for Round 2). This shifts every
+   * subsequent row up by one, so every other transaction's id in that tab is
+   * stale after this call; the frontend is responsible for refetching, not
+   * patching state locally.
+   * @param {string} id - "{sheetTabName}:{rowNumber}"
+   * @return {void}
+   */
+  deleteTransaction: function (id) {
+    var parsed = Utils.parseTransactionId(id);
+
+    var accounts = SheetService.listAccounts();
+    var account = null;
+    for (var i = 0; i < accounts.length; i++) {
+      if (accounts[i].sheetTabName === parsed.sheetTabName) {
+        account = accounts[i];
+        break;
+      }
+    }
+    if (!account) {
+      throw new Error("Unknown account for id: " + id);
+    }
+
+    var sheetId = PropertiesService.getScriptProperties().getProperty("SHEET_ID");
+    var spreadsheet = SpreadsheetApp.openById(sheetId);
+    var sheet = spreadsheet.getSheetByName(account.sheetTabName);
+
+    sheet.deleteRow(parsed.rowNumber);
+
+    Cache.invalidateTab(account.sheetTabName);
+  },
+
+  /**
    * Dashboard aggregation across all accounts. Ported from
    * mockDataService.getDashboardStats — same balance/window/chart/
    * topCategories semantics, expressed against Cache-backed Sheet rows.
