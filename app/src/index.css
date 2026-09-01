@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #fefcf9;
+  --color-surface: #ffffff;
+  --color-ink: #2b2420;
+  --color-ink-soft: #6e645b;
+  --color-ink-faint: #b3aaa1;
+  --color-line: #f0ebe4;
+  --color-hover: #faf8f5;
+  --color-blue: #3a63c4;
+  --color-blue-decor: #5b8def;
+  --color-blue-soft: #eaf1fd;
+  --color-blue-deep: #2f5fc4;
+  --color-orange: #b8590a;
+  --color-orange-decor: #e08a3c;
+  --color-orange-soft: #fdf1e6;
+  --color-orange-deep: #a85a20;
+  --color-green: #2f8a4a;
+  --color-green-soft: #eaf7ee;
+  --color-red: #c03434;
+  --color-red-soft: #fdeaea;
+  --radius-card: 20px;
+  --radius-input: 12px;
+  --shadow-card: 0 1px 2px rgba(43,36,32,0.04), 0 8px 24px -12px rgba(43,36,32,0.10);
+  --font-display: "Baloo 2", "Nunito", system-ui, sans-serif;
+  --font-body: "Nunito", system-ui, sans-serif;
+  --breakpoint-desktop: 861px;
+  --animate-bob: bob 1.6s ease-in-out infinite;
+
+  @keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+}
+
+@layer base {
+  body { @apply bg-bg text-ink font-body antialiased; }
+  h1, h2, h3 { @apply font-display; }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-line);
+    border-radius: 8px;
+  }
+}

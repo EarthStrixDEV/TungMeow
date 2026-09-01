@@ -1,0 +1,14 @@
+# Node / Vite (app/)
+app/node_modules
+app/dist
+app/dist-ssr
+*.local
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+
+# QA artifacts (screenshots from testing sessions)
+qa-screens/

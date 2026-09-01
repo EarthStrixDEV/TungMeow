@@ -1,0 +1,76 @@
+/* TungMeow — shared styles across all pages */
+:root{
+  --bg:#fefcf9;
+  --surface:#ffffff;
+  --ink:#2b2420;
+  --ink-soft:#6e645b;
+  --line:#f0ebe4;
+  --blue:#3a63c4;
+  --blue-decor:#5b8def;
+  --blue-soft:#eaf1fd;
+  --blue-deep:#2f5fc4;
+  --orange:#b8590a;
+  --orange-decor:#e08a3c;
+  --orange-soft:#fdf1e6;
+  --orange-deep:#a85a20;
+  --green:#2f8a4a;
+  --green-soft:#eaf7ee;
+  --radius:20px;
+  --radius-sm:12px;
+  --shadow:0 1px 2px rgba(43,36,32,0.04), 0 8px 24px -12px rgba(43,36,32,0.10);
+  --nav-w:240px;
+  --bottom-h:78px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{font-family:'Nunito',system-ui,sans-serif;color:var(--ink);background:var(--bg);}
+h1,h2,h3,.display{font-family:'Baloo 2','Nunito',system-ui,sans-serif;}
+a{color:var(--blue-deep);text-decoration:none;}
+a:hover{color:var(--orange-deep);}
+button{font-family:inherit;cursor:pointer;}
+img,svg{display:block;}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;}
+
+/* ---------- App shell ---------- */
+.app-shell{display:flex;min-height:100vh;background:var(--bg);}
+.page-content{flex:1;padding:32px 40px;display:flex;flex-direction:column;gap:20px;min-width:0;}
+
+/* ---------- Desktop sidebar ---------- */
+.sidebar{width:var(--nav-w);flex-shrink:0;background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:24px 16px;gap:4px;position:sticky;top:0;height:100vh;}
+.sidebar-brand{display:flex;align-items:center;gap:10px;padding:6px 8px 22px;}
+.sidebar-brand .word{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:16px;line-height:1.1;color:var(--ink);}
+.sidebar-brand .sub{font-size:11px;color:var(--ink-soft);font-weight:600;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 16px;border-radius:14px;font-weight:700;font-size:14.5px;color:var(--ink-soft);}
+.nav-item svg{flex-shrink:0;}
+.nav-item.active{background:var(--blue);color:#fff;box-shadow:0 4px 12px -4px rgba(58,99,196,0.5);}
+.sidebar-spacer{flex:1;}
+.sidebar-user{display:flex;align-items:center;gap:10px;padding:12px 8px;border-top:1px solid var(--line);margin-top:8px;}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--blue-soft);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--blue-deep);font-size:13px;flex-shrink:0;}
+.sidebar-user .name{font-size:13px;font-weight:700;color:var(--ink);}
+.sidebar-user .status{font-size:11px;color:var(--ink-soft);}
+
+/* ---------- Mobile bottom nav ---------- */
+.bottom-nav{display:none;}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex:1;padding:6px 0 4px;font-size:10.5px;font-weight:700;color:#b3aaa1;}
+.tab.active{color:var(--blue);}
+.fab-slot{flex:0 0 64px;display:flex;align-items:center;justify-content:center;}
+.fab{width:52px;height:52px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px -4px rgba(184,89,10,0.6);margin-top:-26px;}
+
+/* ---------- Common bits ---------- */
+.chip{font-size:12px;font-weight:700;padding:5px 12px;border-radius:100px;}
+.tag{font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:100px;}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:800;padding:3px 9px;border-radius:100px;}
+.card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);}
+.page-header{display:flex;align-items:center;justify-content:space-between;}
+.page-title{font-size:26px;font-weight:800;margin:0;color:var(--ink);}
+.page-sub{margin:4px 0 0;color:var(--ink-soft);font-size:14px;}
+
+/* ---------- Responsive breakpoint ---------- */
+@media (max-width: 860px){
+  .sidebar{display:none;}
+  .app-shell{flex-direction:column;}
+  .page-content{padding:20px 18px 96px;gap:16px;}
+  .page-title{font-size:22px;}
+  .bottom-nav{display:flex;position:fixed;left:0;right:0;bottom:0;width:100%;height:var(--bottom-h);background:var(--surface);border-top:1px solid var(--line);align-items:center;padding:0 6px;box-shadow:0 -4px 16px -8px rgba(43,36,32,0.08);z-index:50;}
+}

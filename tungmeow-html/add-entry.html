@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TungMeow — Add Entry</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+  .form-wrap{flex:1;display:flex;justify-content:center;}
+  .form-inner{width:100%;max-width:560px;}
+  .field-label{font-size:12.5px;font-weight:800;color:var(--ink-soft);margin-bottom:7px;display:block;}
+  .field-input{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;font-family:'Nunito',sans-serif;color:var(--ink);background:#fff;}
+  .field-input:focus{outline:none;border-color:var(--blue);}
+  .type-btn{flex:1;padding:12px;border-radius:12px;font-weight:800;font-size:14px;text-align:center;cursor:pointer;border:none;font-family:'Nunito',sans-serif;background:transparent;color:var(--ink-soft);}
+  .type-btn.income-active{background:var(--blue);color:#fff;box-shadow:0 4px 10px -4px rgba(58,99,196,0.5);}
+  .type-btn.expense-active{background:var(--orange);color:#fff;box-shadow:0 4px 10px -4px rgba(184,89,10,0.5);}
+  .cat-chip{padding:9px 16px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;border:1.5px solid var(--line);background:#fff;font-family:'Nunito',sans-serif;color:var(--ink);}
+  .cat-chip.selected{border-color:var(--blue);background:var(--blue-soft);color:var(--blue-deep);}
+  #save-btn{width:100%;color:#fff;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 6px 16px -6px rgba(0,0,0,0.2);}
+  #amount-display{font-size:22px;font-weight:800;text-align:center;border:none;width:100%;background:transparent;font-family:'Nunito',sans-serif;}
+  @media (max-width: 860px){
+    .form-inner{max-width:100%;}
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <nav class="sidebar" id="sidebar-slot"></nav>
+
+  <div class="page-content form-wrap">
+    <div class="form-inner">
+      <div style="margin-bottom:22px;">
+        <h1 class="page-title">Add Entry</h1>
+        <p class="page-sub">Saves straight to your Google Sheet</p>
+      </div>
+
+      <div class="card" style="padding:28px;display:flex;flex-direction:column;gap:20px;">
+
+        <div style="display:flex;gap:10px;background:#faf8f5;padding:6px;border-radius:14px;">
+          <button class="type-btn income-active" id="btn-income">↓ Income</button>
+          <button class="type-btn" id="btn-expense">↑ Expense</button>
+        </div>
+
+        <div>
+          <span class="field-label">Amount (฿)</span>
+          <input id="amount-display" value="0.00" />
+        </div>
+
+        <div>
+          <span class="field-label">Category</span>
+          <div id="cat-chips" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+        </div>
+
+        <div style="display:flex;gap:16px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:180px;">
+            <span class="field-label">Account</span>
+            <select class="field-input">
+              <option>💵 Cash</option>
+              <option>🏦 Bank — KBank</option>
+              <option>💳 Credit Card</option>
+              <option>🐷 Savings</option>
+            </select>
+          </div>
+          <div style="flex:1;min-width:180px;">
+            <span class="field-label">Date</span>
+            <input class="field-input" value="31 Aug 2026" />
+          </div>
+        </div>
+
+        <div>
+          <span class="field-label">Note</span>
+          <input class="field-input" placeholder="e.g. Lunch with team" />
+        </div>
+
+        <button id="save-btn">Save Entry</button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav" id="bottomnav-slot"></nav>
+</div>
+
+<script src="shared.js"></script>
+<script>
+  renderNav('add');
+
+  const INCOME_CATS = [
+    {emoji:'💼', label:'Salary'}, {emoji:'🎁', label:'Gift'}, {emoji:'📈', label:'Investment'}, {emoji:'✨', label:'Other'},
+  ];
+  const EXPENSE_CATS = [
+    {emoji:'🍜', label:'Food'}, {emoji:'🚕', label:'Transport'}, {emoji:'🏠', label:'Bills'}, {emoji:'🛍️', label:'Shopping'}, {emoji:'🎬', label:'Entertainment'}, {emoji:'✨', label:'Other'},
+  ];
+
+  let isIncome = true;
+  let selectedCatIdx = 0;
+
+  function render() {
+    const btnIncome = document.getElementById('btn-income');
+    const btnExpense = document.getElementById('btn-expense');
+    btnIncome.className = 'type-btn' + (isIncome ? ' income-active' : '');
+    btnExpense.className = 'type-btn' + (!isIncome ? ' expense-active' : '');
+
+    const cats = isIncome ? INCOME_CATS : EXPENSE_CATS;
+    document.getElementById('cat-chips').innerHTML = cats.map((c, i) =>
+      `<div class="cat-chip ${i === selectedCatIdx ? 'selected' : ''}" data-idx="${i}">${c.emoji} ${c.label}</div>`
+    ).join('');
+
+    document.getElementById('save-btn').style.background = isIncome ? 'var(--blue)' : 'var(--orange)';
+
+    document.querySelectorAll('.cat-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        selectedCatIdx = parseInt(chip.getAttribute('data-idx'), 10);
+        render();
+      });
+    });
+  }
+
+  document.getElementById('btn-income').addEventListener('click', () => { isIncome = true; selectedCatIdx = 0; render(); });
+  document.getElementById('btn-expense').addEventListener('click', () => { isIncome = false; selectedCatIdx = 0; render(); });
+
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TungMeow — Settings</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+  .settings-card{padding:22px 24px;}
+  .acc-row{display:flex;align-items:center;gap:14px;padding:13px 6px;border-top:1px solid var(--line);}
+  .acc-row:first-of-type{border-top:none;}
+  .action-btn{background:#faf8f5;border:1px solid var(--line);border-radius:10px;padding:9px 16px;font-size:13px;font-weight:700;color:var(--ink);}
+  .settings-content{max-width:900px;}
+  @media (max-width: 860px){
+    .settings-card{padding:16px;border-radius:18px;}
+    .acc-row{gap:11px;padding:11px 2px;}
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <nav class="sidebar" id="sidebar-slot"></nav>
+
+  <div class="page-content settings-content">
+    <div>
+      <h1 class="page-title">Settings</h1>
+      <p class="page-sub">Connection &amp; account sheets</p>
+    </div>
+
+    <!-- Google Sheet connection -->
+    <div class="card settings-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:46px;height:46px;border-radius:14px;background:var(--green-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="#2f8a4a" stroke-width="1.8"/><path d="M7 8H17M7 12H17M7 16H13" stroke="#2f8a4a" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </div>
+          <div>
+            <div style="font-size:15px;font-weight:800;">Google Sheet — Database</div>
+            <div style="font-size:13px;color:var(--ink-soft);">"TungMeow Ledger 2026" · Last synced 2 min ago</div>
+          </div>
+        </div>
+        <span style="display:flex;align-items:center;gap:6px;background:var(--green-soft);color:#2f8a4a;font-size:12.5px;font-weight:800;padding:7px 14px;border-radius:100px;">
+          <span style="width:7px;height:7px;border-radius:50%;background:#2f8a4a;display:inline-block;"></span>
+          Connected
+        </span>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
+        <div class="action-btn">Open in Sheets ↗</div>
+        <div class="action-btn">Sync now</div>
+        <div class="action-btn" style="color:var(--orange-deep);">Disconnect</div>
+      </div>
+    </div>
+
+    <!-- Accounts / sheet tabs -->
+    <div class="card settings-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:8px;">
+        <h3 style="margin:0;font-size:15.5px;font-weight:800;">Accounts</h3>
+        <div style="display:flex;align-items:center;gap:6px;background:var(--blue-soft);color:var(--blue-deep);font-weight:800;font-size:12.5px;padding:8px 14px;border-radius:10px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 6V18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M6 12H18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+          New account
+        </div>
+      </div>
+      <p style="margin:0 0 6px;font-size:12.5px;color:var(--ink-soft);">Each account is stored as its own tab in the Google Sheet.</p>
+
+      <div class="acc-row">
+        <div style="width:38px;height:38px;border-radius:11px;background:var(--blue-soft);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;">💵</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:700;">Cash</div>
+          <div style="font-size:12px;color:var(--ink-soft);">Sheet tab: "Cash" · 42 rows</div>
+        </div>
+        <span style="font-size:13.5px;font-weight:800;">฿4,120</span>
+      </div>
+      <div class="acc-row">
+        <div style="width:38px;height:38px;border-radius:11px;background:var(--orange-soft);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;">🏦</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:700;">Bank — KBank</div>
+          <div style="font-size:12px;color:var(--ink-soft);">Sheet tab: "Bank_KBank" · 58 rows</div>
+        </div>
+        <span style="font-size:13.5px;font-weight:800;">฿38,900</span>
+      </div>
+      <div class="acc-row">
+        <div style="width:38px;height:38px;border-radius:11px;background:var(--blue-soft);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;">💳</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:700;">Credit Card</div>
+          <div style="font-size:12px;color:var(--ink-soft);">Sheet tab: "Credit_Card" · 21 rows</div>
+        </div>
+        <span style="font-size:13.5px;font-weight:800;">−฿3,200</span>
+      </div>
+      <div class="acc-row">
+        <div style="width:38px;height:38px;border-radius:11px;background:var(--orange-soft);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;">🐷</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:700;">Savings</div>
+          <div style="font-size:12px;color:var(--ink-soft);">Sheet tab: "Savings" · 9 rows</div>
+        </div>
+        <span style="font-size:13.5px;font-weight:800;">฿15,000</span>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav" id="bottomnav-slot"></nav>
+</div>
+
+<script src="shared.js"></script>
+<script>renderNav('settings');</script>
+</body>
+</html>

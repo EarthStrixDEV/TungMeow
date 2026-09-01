@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TungMeow — Transactions</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="shared.css">
+<style>
+  .acc-tab{padding:9px 18px;border-radius:100px;font-size:13.5px;font-weight:700;cursor:pointer;border:none;font-family:'Nunito',sans-serif;background:var(--surface);color:var(--ink-soft);box-shadow:var(--shadow);}
+  .acc-tab.active{background:var(--blue);color:#fff;box-shadow:0 4px 12px -4px rgba(58,99,196,0.5);}
+  .th{font-size:11.5px;font-weight:800;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.03em;padding:0 8px 10px;text-align:left;}
+  .td{padding:12px 8px;font-size:13.5px;border-top:1px solid var(--line);}
+  tr:hover .td{background:#faf8f5;}
+  .table-card{padding:8px 24px 20px;flex:1;}
+  .add-btn{display:flex;align-items:center;gap:8px;background:var(--blue);color:#fff;font-weight:800;font-size:13.5px;padding:11px 20px;border-radius:14px;box-shadow:0 4px 12px -4px rgba(58,99,196,0.5);}
+  .desktop-table{display:block !important;}
+  .desktop-table.flex-row{display:flex !important;}
+  .desktop-table.as-table{display:table !important;}
+  .desktop-table.as-inline{display:inline-flex !important;}
+  .mobile-list{display:none !important;}
+  .mobile-list.flex-row{display:none !important;}
+  .acc-tab-m{padding:8px 14px;border-radius:100px;font-size:12.5px;font-weight:700;white-space:nowrap;border:none;font-family:'Nunito',sans-serif;background:var(--surface);color:var(--ink-soft);box-shadow:var(--shadow);}
+  .acc-tab-m.active{background:var(--blue);color:#fff;}
+  .card-row{display:flex;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px solid var(--line);}
+  @media (max-width: 860px){
+    .table-card{padding:6px 14px 4px;border-radius:16px;}
+    .desktop-table{display:none !important;}
+    .desktop-table.flex-row{display:none !important;}
+    .desktop-table.as-table{display:none !important;}
+    .desktop-table.as-inline{display:none !important;}
+    .mobile-list{display:block !important;}
+    .mobile-list.flex-row{display:flex !important;}
+    .add-btn{display:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <nav class="sidebar" id="sidebar-slot"></nav>
+
+  <div class="page-content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Transactions</h1>
+        <p class="page-sub">Each account keeps its own sheet &amp; table</p>
+      </div>
+      <a class="add-btn" href="add-entry.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 6V18" stroke="white" stroke-width="2.4" stroke-linecap="round"/><path d="M6 12H18" stroke="white" stroke-width="2.4" stroke-linecap="round"/></svg>
+        Add Entry
+      </a>
+    </div>
+
+    <!-- Desktop account tabs -->
+    <div class="desktop-table flex-row" id="tabs-desktop" style="gap:8px;flex-wrap:wrap;"></div>
+    <!-- Mobile account tabs -->
+    <div class="mobile-list flex-row" id="tabs-mobile" style="gap:7px;overflow-x:auto;padding-bottom:2px;"></div>
+
+    <div class="card table-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 8px 8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span id="current-title" style="font-size:15px;font-weight:800;"></span>
+          <span class="tag desktop-table as-inline" style="background:var(--blue-soft);color:var(--blue-deep);" id="current-sheet-tag"></span>
+        </div>
+        <div class="desktop-table flex-row" style="gap:8px;align-items:center;">
+          <div style="background:#faf8f5;border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-size:13px;color:var(--ink-soft);display:flex;align-items:center;gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#b3aaa1" stroke-width="1.8"/><path d="M21 21L16.65 16.65" stroke="#b3aaa1" stroke-width="1.8" stroke-linecap="round"/></svg>
+            Search
+          </div>
+          <div style="background:#faf8f5;border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;">Filter ▾</div>
+        </div>
+        <span class="mobile-list" id="current-count-mobile" style="font-size:11.5px;color:var(--ink-soft);"></span>
+      </div>
+
+      <!-- Desktop table -->
+      <table class="desktop-table as-table" style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th class="th">Date</th>
+            <th class="th">Description</th>
+            <th class="th">Category</th>
+            <th class="th">Type</th>
+            <th class="th" style="text-align:right;">Amount</th>
+          </tr>
+        </thead>
+        <tbody id="rows-desktop"></tbody>
+      </table>
+
+      <!-- Mobile list -->
+      <div class="mobile-list" id="rows-mobile"></div>
+
+      <div class="desktop-table flex-row" style="align-items:center;justify-content:space-between;padding:16px 8px 4px;">
+        <span id="current-count-desktop" style="font-size:12.5px;color:var(--ink-soft);"></span>
+        <div style="display:flex;gap:6px;">
+          <div style="width:30px;height:30px;border-radius:8px;background:#faf8f5;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--ink-soft);">‹</div>
+          <div style="width:30px;height:30px;border-radius:8px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;">1</div>
+          <div style="width:30px;height:30px;border-radius:8px;background:#faf8f5;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--ink-soft);">2</div>
+          <div style="width:30px;height:30px;border-radius:8px;background:#faf8f5;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--ink-soft);">›</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav" id="bottomnav-slot"></nav>
+</div>
+
+<script src="shared.js"></script>
+<script>
+  renderNav('transactions');
+
+  const blueTag = 'background:var(--blue-soft);color:var(--blue-deep);';
+  const orangeTag = 'background:var(--orange-soft);color:var(--orange-deep);';
+  const blueAmt = 'var(--blue-deep)';
+  const orangeAmt = 'var(--orange-deep)';
+
+  const ACCOUNTS = [
+    { name: 'Cash', emoji: '💵', total: 42, rows: [
+      {date:'31 Aug', desc:'🍜 Lunch — Somtum Nua', category:'Food', tagStyle:orangeTag, type:'Expense', amount:'−฿120', amountColor:orangeAmt, iconBg:orangeTag},
+      {date:'30 Aug', desc:'☕ Coffee — Amazon Cafe', category:'Food', tagStyle:orangeTag, type:'Expense', amount:'−฿65', amountColor:orangeAmt},
+      {date:'29 Aug', desc:'🚕 Grab ride', category:'Transport', tagStyle:orangeTag, type:'Expense', amount:'−฿89', amountColor:orangeAmt},
+      {date:'28 Aug', desc:'💰 Pocket money from Mom', category:'Gift', tagStyle:blueTag, type:'Income', amount:'+฿2,000', amountColor:blueAmt},
+      {date:'27 Aug', desc:'🛍️ Market shopping', category:'Shopping', tagStyle:orangeTag, type:'Expense', amount:'−฿340', amountColor:orangeAmt},
+      {date:'26 Aug', desc:'🍜 Dinner with friends', category:'Food', tagStyle:orangeTag, type:'Expense', amount:'−฿210', amountColor:orangeAmt},
+    ]},
+    { name: 'Bank — KBank', emoji: '🏦', total: 58, rows: [
+      {date:'30 Aug', desc:'💼 Freelance payment', category:'Salary', tagStyle:blueTag, type:'Income', amount:'+฿8,500', amountColor:blueAmt},
+      {date:'29 Aug', desc:'🏠 Electricity bill', category:'Bills', tagStyle:orangeTag, type:'Expense', amount:'−฿980', amountColor:orangeAmt},
+      {date:'28 Aug', desc:'📶 Internet bill', category:'Bills', tagStyle:orangeTag, type:'Expense', amount:'−฿590', amountColor:orangeAmt},
+      {date:'25 Aug', desc:'💰 Monthly salary', category:'Salary', tagStyle:blueTag, type:'Income', amount:'+฿32,000', amountColor:blueAmt},
+      {date:'22 Aug', desc:'🏋️ Gym membership', category:'Health', tagStyle:orangeTag, type:'Expense', amount:'−฿1,200', amountColor:orangeAmt},
+      {date:'20 Aug', desc:'🎬 Netflix subscription', category:'Entertainment', tagStyle:orangeTag, type:'Expense', amount:'−฿349', amountColor:orangeAmt},
+    ]},
+    { name: 'Credit Card', emoji: '💳', total: 21, rows: [
+      {date:'31 Aug', desc:'🛍️ Shopee order', category:'Shopping', tagStyle:orangeTag, type:'Expense', amount:'−฿1,450', amountColor:orangeAmt},
+      {date:'27 Aug', desc:'✈️ Flight booking', category:'Travel', tagStyle:orangeTag, type:'Expense', amount:'−฿3,200', amountColor:orangeAmt},
+      {date:'24 Aug', desc:'🍔 Dinner — Fuji', category:'Food', tagStyle:orangeTag, type:'Expense', amount:'−฿640', amountColor:orangeAmt},
+      {date:'18 Aug', desc:'💳 Cashback reward', category:'Reward', tagStyle:blueTag, type:'Income', amount:'+฿85', amountColor:blueAmt},
+    ]},
+    { name: 'Savings', emoji: '🐷', total: 9, rows: [
+      {date:'25 Aug', desc:'🐷 Monthly transfer in', category:'Savings', tagStyle:blueTag, type:'Income', amount:'+฿5,000', amountColor:blueAmt},
+      {date:'01 Aug', desc:'🐷 Monthly transfer in', category:'Savings', tagStyle:blueTag, type:'Income', amount:'+฿5,000', amountColor:blueAmt},
+      {date:'01 Jul', desc:'🐷 Monthly transfer in', category:'Savings', tagStyle:blueTag, type:'Income', amount:'+฿5,000', amountColor:blueAmt},
+    ]},
+  ];
+
+  let activeAccount = 0;
+
+  function render() {
+    const acc = ACCOUNTS[activeAccount];
+
+    // Tabs
+    document.getElementById('tabs-desktop').innerHTML = ACCOUNTS.map((a, i) =>
+      `<button class="acc-tab ${i === activeAccount ? 'active' : ''}" data-idx="${i}">${a.emoji} ${a.name}</button>`
+    ).join('');
+    document.getElementById('tabs-mobile').innerHTML = ACCOUNTS.map((a, i) =>
+      `<button class="acc-tab-m ${i === activeAccount ? 'active' : ''}" data-idx="${i}">${a.emoji} ${a.name}</button>`
+    ).join('');
+
+    document.getElementById('current-title').textContent = `${acc.emoji} ${acc.name}`;
+    document.getElementById('current-sheet-tag').textContent = `Sheet: "${acc.name}"`;
+    document.getElementById('current-count-desktop').textContent = `Showing ${acc.rows.length} of ${acc.total} · ${acc.name} account`;
+    document.getElementById('current-count-mobile').textContent = `${acc.rows.length} of ${acc.total}`;
+
+    document.getElementById('rows-desktop').innerHTML = acc.rows.map(r => `
+      <tr>
+        <td class="td">${r.date}</td>
+        <td class="td" style="font-weight:700;">${r.desc}</td>
+        <td class="td"><span class="tag" style="${r.tagStyle}">${r.category}</span></td>
+        <td class="td">${r.type}</td>
+        <td class="td" style="text-align:right;font-weight:800;color:${r.amountColor};">${r.amount}</td>
+      </tr>`).join('');
+
+    document.getElementById('rows-mobile').innerHTML = acc.rows.map(r => {
+      const emojiMatch = r.desc.match(/^\S+/);
+      const emoji = emojiMatch ? emojiMatch[0] : '💰';
+      const descText = r.desc.replace(/^\S+\s*/, '');
+      return `
+      <div class="card-row">
+        <div style="width:34px;height:34px;border-radius:10px;background:${r.tagStyle.includes('blue') ? 'var(--blue-soft)' : 'var(--orange-soft)'};display:flex;align-items:center;justify-content:center;font-size:15px;">${emoji}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${descText}</div>
+          <div style="font-size:11px;color:var(--ink-soft);">${r.date} · ${r.category}</div>
+        </div>
+        <div style="font-size:13.5px;font-weight:800;color:${r.amountColor};flex-shrink:0;">${r.amount}</div>
+      </div>`;
+    }).join('');
+
+    document.querySelectorAll('[data-idx]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeAccount = parseInt(btn.getAttribute('data-idx'), 10);
+        render();
+      });
+    });
+  }
+
+  render();
+</script>
+</body>
+</html>

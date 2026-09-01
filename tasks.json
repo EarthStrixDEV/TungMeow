@@ -1,0 +1,24 @@
+{
+  "project": "TungMeow Google Apps Script backend, plan: ~/.claude/plans/create-a-initial-project-cuddly-snowglobe.md",
+  "note": "Agents cannot access Google Cloud/Apps Script UI directly (needs P'Earth's browser login). Agents write all .gs code + frontend adapter + exact copy-paste deployment doc. P'Earth executes the manual browser steps (create sheet, paste code, run setupSheet, deploy, set env vars).",
+  "tasks": [
+    { "id": 1, "title": "Write setupSheet() Apps Script + Sheet layout spec (tabs, headers, meta)", "owner": "Fah", "status": "done", "deps": [] },
+    { "id": 2, "title": "Apps Script skeleton: Code.gs, Router.gs, Auth.gs, Utils.gs, appsscript.json + getConnectionInfo", "owner": "Noon", "status": "done", "deps": [] },
+    { "id": 3, "title": "Read endpoints: listAccounts, listAccountSummaries, listTransactions, listRecentTransactions in SheetService.gs", "owner": "Maidlin", "status": "done", "deps": [1, 2] },
+    { "id": 4, "title": "Cache.gs (60s TTL) wired into read endpoints", "owner": "Maidlin", "status": "done", "deps": [3] },
+    { "id": 5, "title": "addTransaction write endpoint + cache invalidation", "owner": "Jane", "status": "done", "deps": [4] },
+    { "id": 6, "title": "getDashboardStats: port Periods.gs + Categories.gs + aggregation", "owner": "Jane", "status": "done", "deps": [4] },
+    { "id": 7, "title": "syncNow + error/health-check hardening across all endpoints", "owner": "Jane", "status": "done", "deps": [5, 6] },
+    { "id": 8, "title": "Frontend: appsScriptDataService.ts + .env.example + index.ts toggle", "owner": "Bell", "status": "done", "deps": [7] },
+    { "id": 9, "title": "AddEntryPage.tsx error banner on save failure", "owner": "Bell", "status": "done", "deps": [8] },
+    { "id": 10, "title": "Write exact copy-paste deployment guide for P'Earth (manual browser steps)", "owner": "Ploy", "status": "done", "deps": [7] },
+    { "id": 11, "title": "QA: tsc/build clean, review .gs logic against mock reference, review deployment doc completeness", "owner": "Prae", "status": "done", "deps": [8, 9, 10] },
+    { "id": 12, "title": "Security audit: token handling, exposure risk documentation, injection/validation on inputs", "owner": "Bow", "status": "done", "deps": [11] }
+  ],
+  "findings": [
+    "Round 1: Router.gs initially designed addTransaction as POST — corrected to GET-only before other agents built on top (per CORS strategy).",
+    "Security audit: 3 findings (Sheets formula injection, missing input validation on addTransaction, no rate-limiting documented) — all fixed/documented and re-verified RESOLVED by โบว์ on 2026-09-01. Backend cleared for deployment from a security standpoint.",
+    "QA: 2 minor items (mock/live toggle intentionally deviates from literal plan wording for better DX, deployment doc file-count typo) — toggle kept as-is (justified), typo fixed.",
+    "Residual observation (non-blocking): addTransaction's `date` field has no format validation server-side — flagged by โบว์ as a possible future minor finding, not required for this round."
+  ]
+}
