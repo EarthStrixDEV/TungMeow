@@ -37,6 +37,12 @@ export interface DashboardStats {
   chart: { label: string; income: number; expense: number }[];
   /** Top 4 expense categories in the current window. */
   topCategories: { category: string; emoji: string; amount: number; pctOfMax: number }[];
+  /** Consecutive-day logging streak ending at the most recent logged date. */
+  streak: { count: number; lastLoggedDate: string | null };
+  /** Per-category current vs. 3-prior-period average expense, current + 3 offsets union. */
+  categoryHistory: { category: string; emoji: string; current: number; avgPrior3: number }[];
+  /** Min transaction date across all accounts, or null if no transactions exist. */
+  earliestTransactionDate: string | null;
 }
 
 export interface TransactionQuery {

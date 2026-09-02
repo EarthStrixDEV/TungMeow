@@ -1,14 +1,25 @@
 import { ArrowDownRight, ArrowUpRight, Wallet } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Pill from "../components/ui/Pill";
 import SegmentedControl from "../components/ui/SegmentedControl";
 import Spinner from "../components/ui/Spinner";
 import { dataService, type DashboardStats, type Period, type Transaction } from "../data";
+import AnomalyAlert from "../features/dashboard/AnomalyAlert";
 import IncomeExpenseChart from "../features/dashboard/IncomeExpenseChart";
+import MascotCard from "../features/dashboard/MascotCard";
 import RecentTransactions from "../features/dashboard/RecentTransactions";
 import StatCard from "../features/dashboard/StatCard";
+import StreakBadge from "../features/dashboard/StreakBadge";
 import TopCategories from "../features/dashboard/TopCategories";
+import { detectAnomalies } from "../lib/anomaly";
 import { formatFullDate, formatTHB } from "../lib/format";
+import { periodRange } from "../lib/periods";
+
+/** Parse "yyyy-mm-dd" as a local Date (midnight) — avoids UTC shift from `new Date(isoString)`. */
+function parseISO(iso: string): Date {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
 
 const PERIOD_OPTIONS: { value: Period; label: string }[] = [
   { value: "month", label: "Month" },
@@ -41,6 +52,16 @@ export default function DashboardPage() {
     };
   }, []);
 
+  const hasEnoughHistory = useMemo(() => {
+    if (!stats || stats.earliestTransactionDate === null) return false;
+    return parseISO(stats.earliestTransactionDate) <= periodRange(period, -3).start;
+  }, [stats, period]);
+
+  const anomalies = useMemo(() => {
+    if (!stats) return [];
+    return detectAnomalies(stats.categoryHistory, hasEnoughHistory);
+  }, [stats, hasEnoughHistory]);
+
   return (
     <>
       <header className="flex items-center justify-between">
@@ -51,6 +72,7 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2.5">
+          {stats !== null && <StreakBadge streak={stats.streak} />}
           <SegmentedControl options={PERIOD_OPTIONS} value={period} onChange={setPeriod} />
           <div className="hidden desktop:flex w-[34px] h-[34px] rounded-full bg-blue-soft text-blue-deep text-[13px] font-extrabold items-center justify-center">
             P
@@ -64,6 +86,10 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
+          <MascotCard balanceDeltaPct={stats.balanceDeltaPct} period={period} />
+
+          <AnomalyAlert anomalies={anomalies} />
+
           <div className="flex flex-col desktop:flex-row gap-3 desktop:gap-[18px]">
             <StatCard
               label="Balance"

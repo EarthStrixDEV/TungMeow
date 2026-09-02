@@ -24,7 +24,6 @@ export default function TransactionsPage() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState(""); // debounced copy of searchInput
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
-  const [categoryFilter, setCategoryFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [result, setResult] = useState<TransactionPage | null>(null);
   /** Desktop: current page only. Mobile: accumulated pages (infinite scroll). */
@@ -41,6 +40,10 @@ export default function TransactionsPage() {
   const activeAccount =
     accounts?.find((a) => a.id === paramId) ?? accounts?.[0] ?? null;
   const activeId = activeAccount?.id ?? null;
+
+  // Active category from ?category=; read live so navigating in from Category
+  // Breakdown re-applies the filter even if Transactions is already mounted.
+  const categoryFilter = searchParams.get("category") ?? "all";
 
   useEffect(() => {
     dataService.listAccounts().then(setAccounts);
@@ -85,7 +88,26 @@ export default function TransactionsPage() {
   }, [activeId, search, typeFilter, categoryFilter, page, isDesktop, refreshKey]);
 
   const selectAccount = (id: string) => {
-    setSearchParams({ account: id }, { replace: true });
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("account", id);
+        return next;
+      },
+      { replace: true },
+    );
+  };
+
+  const selectCategory = (value: string) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (value === "all") next.delete("category");
+        else next.set("category", value);
+        return next;
+      },
+      { replace: true },
+    );
   };
 
   const loadMore = useCallback(() => setPage((p) => p + 1), []);
@@ -164,7 +186,7 @@ export default function TransactionsPage() {
                   type={typeFilter}
                   onTypeChange={setTypeFilter}
                   category={categoryFilter}
-                  onCategoryChange={setCategoryFilter}
+                  onCategoryChange={selectCategory}
                 />
                 <button
                   type="button"

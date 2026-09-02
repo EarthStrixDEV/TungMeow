@@ -87,6 +87,48 @@ function sumWindow(transactions: Transaction[], start: Date, end: Date) {
   return { income, expense };
 }
 
+/** Sums expense amounts per category for transactions whose date falls within [start, end). */
+function expenseByCategoryInWindow(transactions: Transaction[], start: Date, end: Date): Map<string, number> {
+  const byCategory = new Map<string, number>();
+  for (const t of transactions) {
+    if (t.type !== "expense") continue;
+    const d = parseISO(t.date).getTime();
+    if (d < start.getTime() || d >= end.getTime()) continue;
+    byCategory.set(t.category, (byCategory.get(t.category) ?? 0) + t.amount);
+  }
+  return byCategory;
+}
+
+/**
+ * Consecutive-day logging streak ending at the most recent logged date.
+ * Note: seed data (seed.ts) doesn't place transactions on consecutive days, so this will typically compute to 1-2 in dev — expected, not a bug.
+ */
+function computeStreak(transactions: Transaction[]): { count: number; lastLoggedDate: string | null } {
+  const dates = new Set<string>();
+  for (const t of transactions) dates.add(t.date);
+  if (dates.size === 0) return { count: 0, lastLoggedDate: null };
+
+  // ISO "yyyy-mm-dd" strings sort lexicographically, so max() is just a string compare.
+  let lastLoggedDate = "";
+  for (const d of dates) {
+    if (d > lastLoggedDate) lastLoggedDate = d;
+  }
+
+  let count = 0;
+  let cursor = parseISO(lastLoggedDate);
+  for (;;) {
+    const y = cursor.getFullYear();
+    const m = String(cursor.getMonth() + 1).padStart(2, "0");
+    const d = String(cursor.getDate()).padStart(2, "0");
+    const iso = `${y}-${m}-${d}`;
+    if (!dates.has(iso)) break;
+    count++;
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() - 1);
+  }
+
+  return { count, lastLoggedDate };
+}
+
 export const mockDataService: DataService = {
   async init() {
     await ensureInit();
@@ -210,7 +252,6 @@ export const mockDataService: DataService = {
 
     const incomeSources = new Set<string>();
     let expenseTxCount = 0;
-    const expenseByCategory = new Map<string, number>();
     for (const t of transactions) {
       const d = parseISO(t.date).getTime();
       if (d < current.start.getTime() || d >= current.end.getTime()) continue;
@@ -218,9 +259,9 @@ export const mockDataService: DataService = {
         incomeSources.add(t.category);
       } else {
         expenseTxCount++;
-        expenseByCategory.set(t.category, (expenseByCategory.get(t.category) ?? 0) + t.amount);
       }
     }
+    const expenseByCategory = expenseByCategoryInWindow(transactions, current.start, current.end);
 
     const chart = [-5, -4, -3, -2, -1, 0].map((offset) => {
       const window = periodRange(period, offset);
@@ -237,6 +278,29 @@ export const mockDataService: DataService = {
       pctOfMax: maxAmount === 0 ? 0 : Math.round((amount / maxAmount) * 100),
     }));
 
+    const streak = computeStreak(transactions);
+
+    // categoryHistory: union of categories seen in the current period + 3 prior periods,
+    // each with current-period expense vs. the average of the 3 prior periods (always /3).
+    const priorWindows = [-1, -2, -3].map((offset) => {
+      const range = periodRange(period, offset);
+      return expenseByCategoryInWindow(transactions, range.start, range.end);
+    });
+    const categoryKeys = new Set<string>(expenseByCategory.keys());
+    for (const prior of priorWindows) {
+      for (const category of prior.keys()) categoryKeys.add(category);
+    }
+    const categoryHistory = [...categoryKeys].map((category) => {
+      const currentAmount = expenseByCategory.get(category) ?? 0;
+      const avgPrior3 = priorWindows.reduce((sum, prior) => sum + (prior.get(category) ?? 0), 0) / 3;
+      return { category, emoji: categoryEmoji(category), current: currentAmount, avgPrior3 };
+    });
+
+    let earliestTransactionDate: string | null = null;
+    for (const t of transactions) {
+      if (earliestTransactionDate === null || t.date < earliestTransactionDate) earliestTransactionDate = t.date;
+    }
+
     return {
       balance,
       income,
@@ -246,6 +310,9 @@ export const mockDataService: DataService = {
       expenseTxCount,
       chart,
       topCategories,
+      streak,
+      categoryHistory,
+      earliestTransactionDate,
     };
   },
 

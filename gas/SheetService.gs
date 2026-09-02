@@ -101,6 +101,78 @@ function sumWindow(transactions, start, end) {
 }
 
 /**
+ * Sums expense amounts per category for transactions whose date falls within
+ * [start, end) — mirrors expenseByCategoryInWindow in mockDataService.ts.
+ * @param {Array<Object>} transactions
+ * @param {Date} start
+ * @param {Date} end
+ * @return {Object} map of category -> summed expense amount
+ */
+function expenseByCategoryInWindow(transactions, start, end) {
+  var byCategory = {};
+  var startMs = start.getTime();
+  var endMs = end.getTime();
+  for (var i = 0; i < transactions.length; i++) {
+    var t = transactions[i];
+    if (t.type !== "expense") continue;
+    var d = parseISODateLocal(t.date).getTime();
+    if (d < startMs || d >= endMs) continue;
+    var prevAmount = Object.prototype.hasOwnProperty.call(byCategory, t.category) ? byCategory[t.category] : 0;
+    byCategory[t.category] = prevAmount + t.amount;
+  }
+  return byCategory;
+}
+
+/**
+ * Formats a local Date as a "yyyy-mm-dd" string — the inverse of
+ * parseISODateLocal, used for the streak day-walk-backward loop.
+ * @param {Date} date
+ * @return {string}
+ */
+function toISODateLocal(date) {
+  var y = date.getFullYear();
+  var m = String(date.getMonth() + 1);
+  if (m.length < 2) m = "0" + m;
+  var d = String(date.getDate());
+  if (d.length < 2) d = "0" + d;
+  return y + "-" + m + "-" + d;
+}
+
+/**
+ * Consecutive-day logging streak ending at the most recent logged date —
+ * mirrors computeStreak in mockDataService.ts.
+ * @param {Array<Object>} transactions
+ * @return {Object} { count: number, lastLoggedDate: string|null }
+ */
+function computeStreak(transactions) {
+  var dates = {};
+  for (var i = 0; i < transactions.length; i++) {
+    dates[transactions[i].date] = true;
+  }
+
+  // ISO "yyyy-mm-dd" strings sort lexicographically, so max() is just a string compare.
+  var lastLoggedDate = null;
+  for (var iso in dates) {
+    if (!Object.prototype.hasOwnProperty.call(dates, iso)) continue;
+    if (lastLoggedDate === null || iso > lastLoggedDate) lastLoggedDate = iso;
+  }
+  if (lastLoggedDate === null) {
+    return { count: 0, lastLoggedDate: null };
+  }
+
+  var count = 0;
+  var cursor = parseISODateLocal(lastLoggedDate);
+  for (;;) {
+    var cursorIso = toISODateLocal(cursor);
+    if (!Object.prototype.hasOwnProperty.call(dates, cursorIso)) break;
+    count++;
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() - 1);
+  }
+
+  return { count: count, lastLoggedDate: lastLoggedDate };
+}
+
+/**
  * Prevents Sheets/CSV formula injection: if the trimmed value starts with
  * =, +, -, or @, Sheets would otherwise auto-interpret the cell as a
  * formula on write. Prefixing with a leading apostrophe forces Sheets to
@@ -442,7 +514,6 @@ var SheetService = {
     var incomeSources = {};
     var incomeSourceCount = 0;
     var expenseTxCount = 0;
-    var expenseByCategory = {};
     var currentStartMs = current.start.getTime();
     var currentEndMs = current.end.getTime();
 
@@ -458,12 +529,9 @@ var SheetService = {
         }
       } else {
         expenseTxCount++;
-        var prevAmount = Object.prototype.hasOwnProperty.call(expenseByCategory, t.category)
-          ? expenseByCategory[t.category]
-          : 0;
-        expenseByCategory[t.category] = prevAmount + t.amount;
       }
     }
+    var expenseByCategory = expenseByCategoryInWindow(all, current.start, current.end);
 
     var chart = [];
     var chartOffsets = [-5, -4, -3, -2, -1, 0];
@@ -502,6 +570,58 @@ var SheetService = {
       });
     }
 
+    var streak = computeStreak(all);
+
+    // categoryHistory: union of categories seen in the current period + 3 prior periods,
+    // each with current-period expense vs. the average of the 3 prior periods (always /3).
+    var priorOffsets = [-1, -2, -3];
+    var priorWindows = [];
+    for (var p = 0; p < priorOffsets.length; p++) {
+      var priorRange = Periods.range(period, priorOffsets[p]);
+      priorWindows.push(expenseByCategoryInWindow(all, priorRange.start, priorRange.end));
+    }
+
+    var categoryKeys = {};
+    for (var cCurrent in expenseByCategory) {
+      if (Object.prototype.hasOwnProperty.call(expenseByCategory, cCurrent)) {
+        categoryKeys[cCurrent] = true;
+      }
+    }
+    for (var w = 0; w < priorWindows.length; w++) {
+      for (var cPrior in priorWindows[w]) {
+        if (Object.prototype.hasOwnProperty.call(priorWindows[w], cPrior)) {
+          categoryKeys[cPrior] = true;
+        }
+      }
+    }
+
+    var categoryHistory = [];
+    for (var category2 in categoryKeys) {
+      if (!Object.prototype.hasOwnProperty.call(categoryKeys, category2)) continue;
+      var currentAmount = Object.prototype.hasOwnProperty.call(expenseByCategory, category2)
+        ? expenseByCategory[category2]
+        : 0;
+      var priorSum = 0;
+      for (var w2 = 0; w2 < priorWindows.length; w2++) {
+        priorSum += Object.prototype.hasOwnProperty.call(priorWindows[w2], category2)
+          ? priorWindows[w2][category2]
+          : 0;
+      }
+      categoryHistory.push({
+        category: category2,
+        emoji: Categories.emoji(category2),
+        current: currentAmount,
+        avgPrior3: priorSum / 3,
+      });
+    }
+
+    var earliestTransactionDate = null;
+    for (var e = 0; e < all.length; e++) {
+      if (earliestTransactionDate === null || all[e].date < earliestTransactionDate) {
+        earliestTransactionDate = all[e].date;
+      }
+    }
+
     return {
       balance: balance,
       income: income,
@@ -511,6 +631,9 @@ var SheetService = {
       expenseTxCount: expenseTxCount,
       chart: chart,
       topCategories: topCategories,
+      streak: streak,
+      categoryHistory: categoryHistory,
+      earliestTransactionDate: earliestTransactionDate,
     };
   },
 

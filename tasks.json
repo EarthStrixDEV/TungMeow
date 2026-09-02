@@ -1,34 +1,67 @@
 {
-  "project": "TungMeow Google Apps Script backend, plan: ~/.claude/plans/create-a-initial-project-cuddly-snowglobe.md",
-  "note": "Agents cannot access Google Cloud/Apps Script UI directly (needs P'Earth's browser login). Agents write all .gs code + frontend adapter + exact copy-paste deployment doc. P'Earth executes the manual browser steps (create sheet, paste code, run setupSheet, deploy, set env vars).",
+  "feature": "Dashboard Insight Features: Streak, Mascot, Anomaly Alert, Category Drilldown",
+  "planFile": "C:\\Users\\Waraponj\\.claude\\plans\\d-my-second-brain-project-dev-meowtung-prancy-quasar.md",
+  "prdFile": "Plan/tungmeow-prd-insight-catfeatures-en.md",
   "tasks": [
-    { "id": 1, "title": "Write setupSheet() Apps Script + Sheet layout spec (tabs, headers, meta)", "owner": "Fah", "status": "done", "deps": [] },
-    { "id": 2, "title": "Apps Script skeleton: Code.gs, Router.gs, Auth.gs, Utils.gs, appsscript.json + getConnectionInfo", "owner": "Noon", "status": "done", "deps": [] },
-    { "id": 3, "title": "Read endpoints: listAccounts, listAccountSummaries, listTransactions, listRecentTransactions in SheetService.gs", "owner": "Maidlin", "status": "done", "deps": [1, 2] },
-    { "id": 4, "title": "Cache.gs (60s TTL) wired into read endpoints", "owner": "Maidlin", "status": "done", "deps": [3] },
-    { "id": 5, "title": "addTransaction write endpoint + cache invalidation", "owner": "Jane", "status": "done", "deps": [4] },
-    { "id": 6, "title": "getDashboardStats: port Periods.gs + Categories.gs + aggregation", "owner": "Jane", "status": "done", "deps": [4] },
-    { "id": 7, "title": "syncNow + error/health-check hardening across all endpoints", "owner": "Jane", "status": "done", "deps": [5, 6] },
-    { "id": 8, "title": "Frontend: appsScriptDataService.ts + .env.example + index.ts toggle", "owner": "Bell", "status": "done", "deps": [7] },
-    { "id": 9, "title": "AddEntryPage.tsx error banner on save failure", "owner": "Bell", "status": "done", "deps": [8] },
-    { "id": 10, "title": "Write exact copy-paste deployment guide for P'Earth (manual browser steps)", "owner": "Ploy", "status": "done", "deps": [7] },
-    { "id": 11, "title": "QA: tsc/build clean, review .gs logic against mock reference, review deployment doc completeness", "owner": "Prae", "status": "done", "deps": [8, 9, 10] },
-    { "id": 12, "title": "Security audit: token handling, exposure risk documentation, injection/validation on inputs", "owner": "Bow", "status": "done", "deps": [11] },
-    { "id": 13, "title": "Round 2 — Refresh button on Transactions page (calls syncNow + refetch current view)", "owner": "Bell", "status": "done", "deps": [] },
-    { "id": 14, "title": "Round 2 — deleteTransaction: add to DataService/types contract (mock + live + backend .gs) + wire to a real Sheet deleteRow()", "owner": "Noon", "status": "done", "deps": [] },
-    { "id": 15, "title": "Round 2 — deleteTransaction: mockDataService implementation", "owner": "Maidlin", "status": "done", "deps": [14] },
-    { "id": 16, "title": "Round 2 — deleteTransaction: SheetService.gs deleteRow() + cache invalidation + redeploy note", "owner": "Jane", "status": "done", "deps": [14] },
-    { "id": 17, "title": "Round 2 — Frontend: delete button + confirm dialog in TransactionTable/TransactionCardList, refetch after delete", "owner": "Bell", "status": "done", "deps": [14, 15] },
-    { "id": 18, "title": "Round 2 — QA: tsc/build, verify refresh + delete against mock, review deleteTransaction .gs logic", "owner": "Prae", "status": "done", "deps": [13, 16, 17] }
-  ],
-  "findings": [
-    "Round 1: Router.gs initially designed addTransaction as POST — corrected to GET-only before other agents built on top (per CORS strategy).",
-    "Security audit: 3 findings (Sheets formula injection, missing input validation on addTransaction, no rate-limiting documented) — all fixed/documented and re-verified RESOLVED by โบว์ on 2026-09-01. Backend cleared for deployment from a security standpoint.",
-    "QA: 2 minor items (mock/live toggle intentionally deviates from literal plan wording for better DX, deployment doc file-count typo) — toggle kept as-is (justified), typo fixed.",
-    "Residual observation (non-blocking): addTransaction's `date` field has no format validation server-side — flagged by โบว์ as a possible future minor finding, not required for this round.",
-    "Deployed to production: https://tungmeow.vercel.app (Vercel, connected to EarthStrixDEV/TungMeow GitHub repo, auto-deploys on push to main) + live Apps Script backend, verified cross-origin working with zero CORS issues on 2026-09-01.",
-    "Round 2 (2026-09-01): P'Earth requested Refresh button + Delete row — both explicit scope expansions beyond MVP spec §7.2/§14 (\"MVP explicitly excludes editing or deleting a row\"), confirmed and approved by P'Earth before starting. Delete uses real Sheets deleteRow() (not soft-delete) — every row-number-based id downstream of a delete is invalidated, so the frontend must always refetch the full list after a successful delete rather than optimistically removing just one row locally.",
-    "Round 2 QA: 1 minor finding (delete button not disabled during its own pending request, theoretical double-click race on real backend) — fixed via per-row deletingId state, re-verified RESOLVED by แพร on 2026-09-01. IMPORTANT tooling note: bare `npx tsc --noEmit` (no -p flag) silently checks nothing in this project — root tsconfig.json is references-only; always use `npx tsc --noEmit -p tsconfig.app.json` or `npm run build`.",
-    "Round 2 code changes not yet redeployed: gas/SheetService.gs and gas/Router.gs were updated locally (deleteTransaction) but the LIVE Apps Script Web App at production still runs the pre-Round-2 version until P'Earth manually re-pastes both files into the Apps Script editor and redeploys a New version (see gas/DEPLOYMENT.md's new section). Frontend on Vercel auto-deployed via git push already includes Round 2 UI, but delete/refresh against the LIVE sheet won't work until the backend redeploy happens."
+    {
+      "id": "T1",
+      "title": "Backend: streak, categoryHistory, earliestTransactionDate on DashboardStats",
+      "layer": "backend-logic",
+      "owner": "มายด์ลิน (Maidlin)",
+      "status": "done",
+      "dependsOn": [],
+      "needsSecurity": false,
+      "detail": "Edit types.ts (DashboardStats +streak +categoryHistory +earliestTransactionDate), mockDataService.ts (computeStreak helper, expenseByCategoryInWindow helper for 3 prior periods, categoryHistory build, earliestTransactionDate scan), gas/SheetService.gs (identical computeStreak + expenseByCategoryInWindow helpers, same fields). Must stay in exact semantic sync per plan Feature 1 + Feature 3 backend sections."
+    },
+    {
+      "id": "T2",
+      "title": "CatLogo mood prop + mascotMood.ts pure function",
+      "layer": "frontend-ui",
+      "owner": "ออม (Aom)",
+      "status": "done",
+      "dependsOn": [],
+      "needsSecurity": false,
+      "detail": "Plan Feature 2: extend CatLogoProps with mood ('happy'|'neutral'|'worried', default 'neutral'), swap mouth path via MOUTH_PATHS lookup, keep neutral = current path unchanged. New app/src/lib/mascotMood.ts with deriveMascotMood(balanceDeltaPct) pure function, WORRIED_THRESHOLD_PCT = -10."
+    },
+    {
+      "id": "T3",
+      "title": "StreakBadge, MascotCard, AnomalyAlert, DonutChart components",
+      "layer": "frontend-ui",
+      "owner": "ออม (Aom)",
+      "status": "done",
+      "dependsOn": ["T1", "T2"],
+      "needsSecurity": false,
+      "detail": "Plan Feature 1/2/3/4 frontend component sections: app/src/features/dashboard/StreakBadge.tsx, MascotCard.tsx (with click-outside popover per FilterBar pattern), AnomalyAlert.tsx, app/src/lib/anomaly.ts (detectAnomalies pure fn, ANOMALY_THRESHOLD_PCT=30), app/src/features/category-breakdown/DonutChart.tsx (hand-rolled SVG, polarToCartesian helper, legend list, no new deps)."
+    },
+    {
+      "id": "T4",
+      "title": "Wire components into DashboardPage + App.tsx route + CategoryBreakdownPage",
+      "layer": "frontend-integration",
+      "owner": "เบล (Bell)",
+      "status": "done",
+      "dependsOn": ["T3"],
+      "needsSecurity": false,
+      "detail": "Plan Feature 1-4 wiring: DashboardPage.tsx renders StreakBadge/MascotCard/AnomalyAlert with useMemo for hasEnoughHistory+detectAnomalies. App.tsx adds /category-breakdown route inside AppShell. New app/src/pages/CategoryBreakdownPage.tsx (own period state+SegmentedControl, empty state with CatLogo mood=neutral, onSliceClick navigation)."
+    },
+    {
+      "id": "T5",
+      "title": "TransactionsPage ?category= URL param + TopCategories drilldown links",
+      "layer": "frontend-integration",
+      "owner": "เบล (Bell)",
+      "status": "done",
+      "dependsOn": ["T4"],
+      "needsSecurity": false,
+      "detail": "Plan Feature 4: TransactionsPage.tsx reads categoryFilter live from searchParams.get('category'), writes back on FilterBar change (mirrors ?account= pattern exactly). TopCategories.tsx adds 'See full breakdown ->' link + per-row click-through to /transactions?category=X."
+    },
+    {
+      "id": "T6",
+      "title": "QA pass: build + acceptance criteria verification",
+      "layer": "qa",
+      "owner": "แพร (Prae)",
+      "status": "done",
+      "dependsOn": ["T1", "T2", "T3", "T4", "T5"],
+      "needsSecurity": false,
+      "detail": "npm run build clean. Verify PRD acceptance criteria for all 4 features (edge cases: <3 periods no anomaly card, null balanceDeltaPct = neutral mascot, streak reset to 1, empty category breakdown state, category filter round-trips via URL). Line-by-line parity check gas/SheetService.gs vs mockDataService.ts."
+    }
   ]
 }
