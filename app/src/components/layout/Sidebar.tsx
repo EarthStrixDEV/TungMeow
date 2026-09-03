@@ -1,12 +1,12 @@
-import { NavLink } from "react-router-dom";
 import CatLogo from "../brand/CatLogo";
+import { NavLink } from "react-router-dom";
 import { SIDEBAR_ITEMS } from "./NavItems";
 
 export default function Sidebar() {
   return (
     <aside className="hidden desktop:flex w-[240px] shrink-0 sticky top-0 h-screen flex-col gap-1 bg-surface border-r border-line p-[24px_16px]">
       <div className="flex items-center gap-[10px] p-[6px_8px_22px]">
-        <CatLogo size={34} />
+        <CatLogo size={42} />
         <div>
           <div className="font-display font-extrabold text-base leading-[1.1] text-ink">
             TungMeow
