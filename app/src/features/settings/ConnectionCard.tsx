@@ -3,6 +3,7 @@ import { FileSpreadsheet } from "lucide-react";
 import Card from "../../components/ui/Card";
 import { dataService, type ConnectionInfo } from "../../data";
 import { formatRelativeTime } from "../../lib/format";
+import { confirmDisconnectSheet, notify } from "../../lib/notifications";
 
 const ACTION_BTN =
   "bg-hover border border-line rounded-[10px] px-4 py-2 font-bold text-sm text-ink";
@@ -27,16 +28,25 @@ export default function ConnectionCard() {
     setSyncing(true);
     try {
       setInfo(await dataService.syncNow());
+      notify.success({ title: "Sheet synced", text: "Your latest data is ready." });
+    } catch (err) {
+      notify.error({
+        title: "Couldn't sync your sheet",
+        text: err instanceof Error ? err.message : "Please try again.",
+      });
     } finally {
       setSyncing(false);
     }
   };
 
-  const handleDisconnect = () => {
-    // Mock: confirmation only — no state change until a real client exists.
-    window.confirm(
-      "Disconnect this Google Sheet? TungMeow can't read or write until you reconnect.",
-    );
+  const handleDisconnect = async () => {
+    if (!(await confirmDisconnectSheet())) return;
+
+    // Mock: a disconnect endpoint has not been added to the data contract yet.
+    notify.info({
+      title: "Disconnect is not available yet",
+      text: "Your Google Sheet remains connected for now.",
+    });
   };
 
   return (

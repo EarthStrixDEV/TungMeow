@@ -5,6 +5,7 @@ import Card from "../components/ui/Card";
 import Spinner from "../components/ui/Spinner";
 import { dataService } from "../data";
 import type { Account, Transaction, TransactionPage } from "../data";
+import { confirmDeleteTransaction, notify } from "../lib/notifications";
 import { useMediaQuery } from "../lib/useMediaQuery";
 import AccountTabs from "../features/transactions/AccountTabs";
 import FilterBar from "../features/transactions/FilterBar";
@@ -121,7 +122,7 @@ export default function TransactionsPage() {
   }, []);
 
   const handleDelete = useCallback(async (id: string) => {
-    if (!window.confirm("Delete this transaction? This can't be undone.")) return;
+    if (!(await confirmDeleteTransaction())) return;
     setDeletingId(id);
     try {
       await dataService.deleteTransaction(id);
@@ -130,8 +131,12 @@ export default function TransactionsPage() {
       setPage(1);
       setItems([]);
       setRefreshKey((k) => k + 1);
+      notify.success({ title: "Transaction deleted", text: "Your ledger has been refreshed." });
     } catch (err) {
-      window.alert("Failed to delete: " + (err instanceof Error ? err.message : "unknown error"));
+      notify.error({
+        title: "Couldn't delete transaction",
+        text: err instanceof Error ? err.message : "Please try again.",
+      });
     } finally {
       setDeletingId(null);
     }
