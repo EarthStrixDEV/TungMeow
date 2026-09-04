@@ -13,6 +13,8 @@ const SEED_ACCOUNTS = [
 const TRANSACTION_HEADERS = ["Date", "Description", "Category", "Type", "Amount", "Note"];
 const META_SHEET_NAME = "_TungMeow_Meta";
 const META_HEADERS = ["id", "name", "icon", "sheetTabName", "sortOrder", "createdAt"];
+const BUDGET_CAPS_SHEET_NAME = "_BudgetCaps";
+const BUDGET_CAPS_HEADERS = ["category", "monthlyLimit", "createdAt"];
 
 function setupSheet() {
   var sheetId = PropertiesService.getScriptProperties().getProperty("SHEET_ID");
@@ -37,13 +39,15 @@ function setupSheet() {
   }
 
   var metaResult = setupMetaTab(spreadsheet);
+  var budgetCapsResult = setupBudgetCapsTab(spreadsheet);
 
   Logger.log(
-    "setupSheet done. Account tabs created: [%s]. Already existed: [%s]. Meta tab created: %s. Meta rows appended: %s.",
+    "setupSheet done. Account tabs created: [%s]. Already existed: [%s]. Meta tab created: %s. Meta rows appended: %s. Budget caps tab created: %s.",
     createdTabs.join(", "),
     existingTabs.join(", "),
     metaResult.tabCreated,
-    metaResult.rowsAppended.join(", ")
+    metaResult.rowsAppended.join(", "),
+    budgetCapsResult.tabCreated
   );
 }
 
@@ -110,6 +114,30 @@ function setupMetaTab(spreadsheet) {
   }
 
   return { tabCreated: tabCreated, rowsAppended: rowsAppended };
+}
+
+function setupBudgetCapsTab(spreadsheet) {
+  var sheet = spreadsheet.getSheetByName(BUDGET_CAPS_SHEET_NAME);
+  var tabCreated = false;
+
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(BUDGET_CAPS_SHEET_NAME);
+    tabCreated = true;
+  }
+
+  var headerRange = sheet.getRange(1, 1, 1, BUDGET_CAPS_HEADERS.length);
+  headerRange.setValues([BUDGET_CAPS_HEADERS]);
+  headerRange.setFontWeight("bold");
+  headerRange.setBackground("#f0ebe4");
+  sheet.setFrozenRows(1);
+
+  // No seed rows here (unlike setupMetaTab) — budget caps start empty until
+  // a user sets one via the Settings UI.
+  if (!sheet.isSheetHidden()) {
+    sheet.hideSheet();
+  }
+
+  return { tabCreated: tabCreated };
 }
 
 // --- Web App entry points -------------------------------------------------

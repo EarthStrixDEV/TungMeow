@@ -1,0 +1,105 @@
+{
+  "feature": "A1 Budget Cap",
+  "planFile": "C:\\Users\\Waraponj\\.claude\\plans\\implement-new-feature-following-swirling-waffle.md",
+  "size": "Large",
+  "tasks": [
+    {
+      "id": "T1",
+      "layer": "database",
+      "owner": "fah",
+      "title": "Add _BudgetCaps sheet tab + cache helpers",
+      "files": ["gas/Code.gs", "gas/Cache.gs"],
+      "dependsOn": [],
+      "needsBow": true,
+      "status": "done"
+    },
+    {
+      "id": "T2",
+      "layer": "contract",
+      "owner": "noon",
+      "title": "Define BudgetCap type + DataService method signatures",
+      "files": ["app/src/data/types.ts", "app/src/data/DataService.ts"],
+      "dependsOn": [],
+      "needsBow": false,
+      "status": "done"
+    },
+    {
+      "id": "T3",
+      "layer": "backend-logic",
+      "owner": "maidlin",
+      "title": "Implement SheetService.getBudgetCaps / setBudgetCap (upsert+delete)",
+      "files": ["gas/SheetService.gs"],
+      "dependsOn": ["T1", "T2"],
+      "needsBow": true,
+      "status": "done"
+    },
+    {
+      "id": "T4",
+      "layer": "backend-endpoint",
+      "owner": "jane",
+      "title": "Wire getBudgetCaps/setBudgetCap actions into Router.gs",
+      "files": ["gas/Router.gs"],
+      "dependsOn": ["T3"],
+      "needsBow": true,
+      "status": "done"
+    },
+    {
+      "id": "T5",
+      "layer": "frontend-logic",
+      "owner": "aom",
+      "title": "budgetCap.ts pure threshold/status/pct helpers (reuse healthScore constants)",
+      "files": ["app/src/lib/budgetCap.ts"],
+      "dependsOn": ["T2"],
+      "needsBow": false,
+      "status": "done"
+    },
+    {
+      "id": "T6",
+      "layer": "frontend-ui",
+      "owner": "aom",
+      "title": "BudgetCapCard (Settings) + BudgetCapProgress (Dashboard) components",
+      "files": [
+        "app/src/features/settings/BudgetCapCard.tsx",
+        "app/src/features/dashboard/BudgetCapProgress.tsx"
+      ],
+      "dependsOn": ["T2", "T5"],
+      "needsBow": false,
+      "status": "done"
+    },
+    {
+      "id": "T7",
+      "layer": "frontend-integration",
+      "owner": "bell",
+      "title": "Implement mock/appsScript data methods + wire pages",
+      "files": [
+        "app/src/data/mockDataService.ts",
+        "app/src/data/appsScriptDataService.ts",
+        "app/src/pages/SettingsPage.tsx",
+        "app/src/pages/DashboardPage.tsx"
+      ],
+      "dependsOn": ["T2", "T4", "T6"],
+      "needsBow": false,
+      "status": "done"
+    },
+    {
+      "id": "T8",
+      "layer": "qa",
+      "owner": "prae",
+      "title": "Verify acceptance criteria via mock (build/lint + edge cases)",
+      "files": [],
+      "dependsOn": ["T7"],
+      "needsBow": false,
+      "status": "done"
+    },
+    {
+      "id": "T9",
+      "layer": "security-audit",
+      "owner": "bow",
+      "title": "Final audit: schema untouched, gas/ changes flagged, no secrets, non-goals respected",
+      "files": [],
+      "dependsOn": ["T8"],
+      "needsBow": false,
+      "status": "done"
+    }
+  ]
+}

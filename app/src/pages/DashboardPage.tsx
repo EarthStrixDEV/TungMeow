@@ -6,8 +6,16 @@ import SegmentedControl from "../components/ui/SegmentedControl";
 import Spinner from "../components/ui/Spinner";
 import ToastStack from "../components/ui/Toast";
 import type { ToastItem } from "../components/ui/Toast";
-import { dataService, type AccountSummary, type DashboardStats, type Period, type Transaction } from "../data";
+import {
+  dataService,
+  type AccountSummary,
+  type BudgetCap,
+  type DashboardStats,
+  type Period,
+  type Transaction,
+} from "../data";
 import AnomalyAlert from "../features/dashboard/AnomalyAlert";
+import BudgetCapProgress from "../features/dashboard/BudgetCapProgress";
 import ForecastCard from "../features/dashboard/ForecastCard";
 import HealthScoreCard from "../features/dashboard/HealthScoreCard";
 import IncomeExpenseChart from "../features/dashboard/IncomeExpenseChart";
@@ -38,6 +46,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recent, setRecent] = useState<(Transaction & { accountName: string })[]>([]);
   const [accountSummaries, setAccountSummaries] = useState<AccountSummary[]>([]);
+  const [budgetCaps, setBudgetCaps] = useState<BudgetCap[]>([]);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   useEffect(() => {
@@ -64,6 +73,16 @@ export default function DashboardPage() {
     let cancelled = false;
     dataService.listAccountSummaries().then((items) => {
       if (!cancelled) setAccountSummaries(items);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    dataService.getBudgetCaps().then((items) => {
+      if (!cancelled) setBudgetCaps(items);
     });
     return () => {
       cancelled = true;
@@ -183,6 +202,8 @@ export default function DashboardPage() {
           </div>
 
           <ForecastCard balance={stats.balance} expense={stats.expense} period={period} />
+
+          <BudgetCapProgress budgetCaps={budgetCaps} categoryHistory={stats.categoryHistory} />
 
           <div className="flex flex-col desktop:flex-row gap-4 desktop:gap-[18px]">
             <IncomeExpenseChart chart={stats.chart} period={period} />

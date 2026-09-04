@@ -2,6 +2,7 @@ import type { DataService } from "./DataService";
 import type {
   Account,
   AccountSummary,
+  BudgetCap,
   ConnectionInfo,
   DashboardStats,
   Period,
@@ -41,6 +42,7 @@ interface Store {
   /** Next free row per sheet tab (row 1 = header). */
   nextRowByTab: Map<string, number>;
   lastSyncedAt: string;
+  budgetCaps: BudgetCap[];
 }
 
 let store: Store | null = null;
@@ -65,6 +67,7 @@ function ensureInit(): Promise<void> {
       transactions,
       nextRowByTab,
       lastSyncedAt: new Date().toISOString(),
+      budgetCaps: [],
     };
   })();
   return initPromise;
@@ -327,6 +330,34 @@ export const mockDataService: DataService = {
     await delay(WRITE_DELAY_MS);
     requireStore().lastSyncedAt = new Date().toISOString();
     return connectionInfo();
+  },
+
+  async getBudgetCaps() {
+    await ensureInit();
+    await delay(READ_DELAY_MS);
+    return requireStore().budgetCaps.map((c) => ({ ...c }));
+  },
+
+  async setBudgetCap(category: string, monthlyLimit: number) {
+    await ensureInit();
+    await delay(WRITE_DELAY_MS);
+    const s = requireStore();
+    const index = s.budgetCaps.findIndex((c) => c.category === category);
+    const shouldDelete = !Number.isFinite(monthlyLimit) || monthlyLimit <= 0;
+
+    if (shouldDelete) {
+      if (index !== -1) s.budgetCaps.splice(index, 1);
+      return null;
+    }
+
+    if (index !== -1) {
+      s.budgetCaps[index] = { ...s.budgetCaps[index], monthlyLimit };
+      return { ...s.budgetCaps[index] };
+    }
+
+    const cap: BudgetCap = { category, monthlyLimit, createdAt: new Date().toISOString() };
+    s.budgetCaps.push(cap);
+    return { ...cap };
   },
 };
 

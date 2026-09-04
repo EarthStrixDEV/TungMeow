@@ -710,4 +710,79 @@ var SheetService = {
       sheetUrl: health.sheetUrl,
     };
   },
+
+  /**
+   * @return {Array<Object>} BudgetCap[] - { category, monthlyLimit, createdAt }, unsorted.
+   */
+  getBudgetCaps: function () {
+    var rows = Cache.getBudgetCapRows();
+    var caps = [];
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      caps.push({
+        category: row[0],
+        monthlyLimit: Number(row[1]),
+        createdAt: row[2],
+      });
+    }
+    return caps;
+  },
+
+  /**
+   * Upserts or deletes a per-category monthly budget cap (spec: A1 Budget
+   * Cap). monthlyLimit <= 0 (or not a finite number) deletes the cap row for
+   * that category if one exists; a no-op otherwise. Idempotent either way.
+   * @param {string} category
+   * @param {number} monthlyLimit
+   * @return {Object|null} BudgetCap - { category, monthlyLimit, createdAt } -
+   *   or null when the cap was deleted or doesn't exist.
+   */
+  setBudgetCap: function (category, monthlyLimit) {
+    var rows = Cache.getBudgetCapRows();
+    var existingIndex = -1;
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i][0] === category) {
+        existingIndex = i;
+        break;
+      }
+    }
+
+    var shouldDelete = !isFinite(monthlyLimit) || monthlyLimit <= 0;
+
+    if (shouldDelete) {
+      if (existingIndex === -1) {
+        return null;
+      }
+      var sheetId = PropertiesService.getScriptProperties().getProperty("SHEET_ID");
+      var spreadsheet = SpreadsheetApp.openById(sheetId);
+      var sheet = spreadsheet.getSheetByName(BUDGET_CAPS_SHEET_NAME);
+      sheet.deleteRow(existingIndex + 2);
+      Cache.invalidateBudgetCaps();
+      return null;
+    }
+
+    var sheetId2 = PropertiesService.getScriptProperties().getProperty("SHEET_ID");
+    var spreadsheet2 = SpreadsheetApp.openById(sheetId2);
+    var sheet2 = spreadsheet2.getSheetByName(BUDGET_CAPS_SHEET_NAME);
+
+    if (existingIndex !== -1) {
+      var rowNumber = existingIndex + 2;
+      sheet2.getRange(rowNumber, 2).setValue(monthlyLimit);
+      Cache.invalidateBudgetCaps();
+      return {
+        category: category,
+        monthlyLimit: monthlyLimit,
+        createdAt: rows[existingIndex][2],
+      };
+    }
+
+    var createdAt = new Date().toISOString();
+    sheet2.appendRow([category, monthlyLimit, createdAt]);
+    Cache.invalidateBudgetCaps();
+    return {
+      category: category,
+      monthlyLimit: monthlyLimit,
+      createdAt: createdAt,
+    };
+  },
 };

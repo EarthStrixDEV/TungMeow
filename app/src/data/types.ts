@@ -66,3 +66,9 @@ export interface ConnectionInfo {
   lastSyncedAt: string;
   sheetUrl: string;
 }
+
+export interface BudgetCap {
+  category: string;
+  monthlyLimit: number;
+  createdAt: string;
+}

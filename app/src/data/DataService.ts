@@ -1,6 +1,7 @@
 import type {
   Account,
   AccountSummary,
+  BudgetCap,
   ConnectionInfo,
   DashboardStats,
   Period,
@@ -34,4 +35,7 @@ export interface DataService {
   getDashboardStats(period: Period): Promise<DashboardStats>;
   getConnectionInfo(): Promise<ConnectionInfo>;
   syncNow(): Promise<ConnectionInfo>;
+  getBudgetCaps(): Promise<BudgetCap[]>;
+  /** monthlyLimit <= 0 deletes the cap for that category; returns null when deleted. */
+  setBudgetCap(category: string, monthlyLimit: number): Promise<BudgetCap | null>;
 }

@@ -2,6 +2,7 @@ import type { DataService } from "./DataService";
 import type {
   Account,
   AccountSummary,
+  BudgetCap,
   ConnectionInfo,
   DashboardStats,
   Period,
@@ -105,5 +106,13 @@ export const appsScriptDataService: DataService = {
 
   syncNow() {
     return call<ConnectionInfo>("syncNow", {});
+  },
+
+  getBudgetCaps() {
+    return call<BudgetCap[]>("getBudgetCaps", {});
+  },
+
+  setBudgetCap(category: string, monthlyLimit: number) {
+    return call<BudgetCap | null>("setBudgetCap", { category, monthlyLimit });
   },
 };

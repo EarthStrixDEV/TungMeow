@@ -7,6 +7,7 @@
 //
 // Cached values are JSON-stringified row arrays (header row already sliced
 // off), matching what SheetService needs directly off getDataRange().getValues().
+//   budget caps rows: "budgetcaps:all"
 
 var CACHE_TTL_SECONDS = 60;
 
@@ -82,5 +83,34 @@ var Cache = {
    */
   invalidateMeta: function () {
     CacheService.getScriptCache().remove("meta:accounts");
+  },
+
+  /**
+   * Cached read of the _BudgetCaps tab's data rows (header row excluded).
+   * @return {Array<Array<*>>}
+   */
+  getBudgetCapRows: function () {
+    var cache = CacheService.getScriptCache();
+    var key = "budgetcaps:all";
+    var cached = cache.get(key);
+    if (cached !== null) {
+      return JSON.parse(cached);
+    }
+
+    var sheetId = PropertiesService.getScriptProperties().getProperty("SHEET_ID");
+    var spreadsheet = SpreadsheetApp.openById(sheetId);
+    var sheet = spreadsheet.getSheetByName(BUDGET_CAPS_SHEET_NAME);
+    var values = sheet.getDataRange().getValues();
+    var rows = values.slice(1);
+
+    cache.put(key, JSON.stringify(rows), CACHE_TTL_SECONDS);
+    return rows;
+  },
+
+  /**
+   * Invalidates the cached budget cap rows.
+   */
+  invalidateBudgetCaps: function () {
+    CacheService.getScriptCache().remove("budgetcaps:all");
   },
 };

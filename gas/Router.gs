@@ -95,6 +95,18 @@ var Router = {
         case "syncNow":
           return { ok: true, data: SheetService.syncNow() };
 
+        case "getBudgetCaps":
+          return { ok: true, data: SheetService.getBudgetCaps() };
+
+        case "setBudgetCap":
+          // Sent via GET query string like every other action. amount <= 0
+          // (or missing) tells SheetService to delete the cap for that
+          // category, so data may legitimately be null.
+          return {
+            ok: true,
+            data: SheetService.setBudgetCap(params.category, Number(params.monthlyLimit)),
+          };
+
         default:
           return {
             ok: false,
