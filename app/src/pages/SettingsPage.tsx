@@ -1,5 +1,6 @@
 import ConnectionCard from "../features/settings/ConnectionCard";
 import AccountsList from "../features/settings/AccountsList";
+import SavingsGoalCard from "../features/settings/SavingsGoalCard";
 
 export default function SettingsPage() {
   return (
@@ -11,6 +12,7 @@ export default function SettingsPage() {
 
       <ConnectionCard />
       <AccountsList />
+      <SavingsGoalCard />
     </div>
   );
 }

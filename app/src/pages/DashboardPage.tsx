@@ -1,10 +1,15 @@
-import { ArrowDownRight, ArrowUpRight, Wallet } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Award, Sparkles, Wallet } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import Pill from "../components/ui/Pill";
 import SegmentedControl from "../components/ui/SegmentedControl";
 import Spinner from "../components/ui/Spinner";
-import { dataService, type DashboardStats, type Period, type Transaction } from "../data";
+import ToastStack from "../components/ui/Toast";
+import type { ToastItem } from "../components/ui/Toast";
+import { dataService, type AccountSummary, type DashboardStats, type Period, type Transaction } from "../data";
 import AnomalyAlert from "../features/dashboard/AnomalyAlert";
+import ForecastCard from "../features/dashboard/ForecastCard";
+import HealthScoreCard from "../features/dashboard/HealthScoreCard";
 import IncomeExpenseChart from "../features/dashboard/IncomeExpenseChart";
 import MascotCard from "../features/dashboard/MascotCard";
 import RecentTransactions from "../features/dashboard/RecentTransactions";
@@ -12,6 +17,7 @@ import StatCard from "../features/dashboard/StatCard";
 import StreakBadge from "../features/dashboard/StreakBadge";
 import TopCategories from "../features/dashboard/TopCategories";
 import { detectAnomalies } from "../lib/anomaly";
+import { evaluateBadges } from "../lib/badgeEvaluator";
 import { formatFullDate, formatTHB } from "../lib/format";
 import { periodRange } from "../lib/periods";
 
@@ -31,6 +37,8 @@ export default function DashboardPage() {
   const [period, setPeriod] = useState<Period>("month");
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recent, setRecent] = useState<(Transaction & { accountName: string })[]>([]);
+  const [accountSummaries, setAccountSummaries] = useState<AccountSummary[]>([]);
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -51,6 +59,35 @@ export default function DashboardPage() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    dataService.listAccountSummaries().then((items) => {
+      if (!cancelled) setAccountSummaries(items);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!stats || accountSummaries.length === 0) return;
+    const newlyUnlocked = evaluateBadges({ stats, accountSummaries });
+    if (newlyUnlocked.length === 0) return;
+    setToasts((prev) => [
+      ...prev,
+      ...newlyUnlocked.map((badge) => ({
+        id: badge.id,
+        title: `Badge unlocked: ${badge.label}`,
+        description: badge.description,
+        emoji: badge.emoji,
+      })),
+    ]);
+  }, [stats, accountSummaries]);
+
+  const dismissToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
 
   const hasEnoughHistory = useMemo(() => {
     if (!stats || stats.earliestTransactionDate === null) return false;
@@ -73,6 +110,20 @@ export default function DashboardPage() {
         </div>
         <div className="flex items-center gap-2.5">
           {stats !== null && <StreakBadge streak={stats.streak} />}
+          <Link
+            to="/badges"
+            className="flex items-center gap-1.5 rounded-input bg-orange-soft px-3 py-2 text-[12.5px] font-bold text-orange-deep"
+          >
+            <Award size={15} />
+            Badges
+          </Link>
+          <Link
+            to="/wrapup"
+            className="hidden desktop:flex items-center gap-1.5 rounded-input bg-blue-soft px-3 py-2 text-[12.5px] font-bold text-blue-deep"
+          >
+            <Sparkles size={15} />
+            Wrap-up
+          </Link>
           <SegmentedControl options={PERIOD_OPTIONS} value={period} onChange={setPeriod} />
           <div className="hidden desktop:flex w-[34px] h-[34px] rounded-full bg-blue-soft text-blue-deep text-[13px] font-extrabold items-center justify-center">
             P
@@ -80,13 +131,18 @@ export default function DashboardPage() {
         </div>
       </header>
 
+      <ToastStack items={toasts} onDismiss={dismissToast} />
+
       {stats === null ? (
         <div className="flex flex-1 items-center justify-center">
           <Spinner />
         </div>
       ) : (
         <>
-          <MascotCard balanceDeltaPct={stats.balanceDeltaPct} period={period} />
+          <div className="flex flex-col desktop:flex-row gap-3 desktop:gap-[18px]">
+            <MascotCard balanceDeltaPct={stats.balanceDeltaPct} period={period} />
+            <HealthScoreCard income={stats.income} expense={stats.expense} />
+          </div>
 
           <AnomalyAlert anomalies={anomalies} />
 
@@ -125,6 +181,8 @@ export default function DashboardPage() {
               }
             />
           </div>
+
+          <ForecastCard balance={stats.balance} expense={stats.expense} period={period} />
 
           <div className="flex flex-col desktop:flex-row gap-4 desktop:gap-[18px]">
             <IncomeExpenseChart chart={stats.chart} period={period} />

@@ -1,11 +1,13 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import AppShell from "./components/layout/AppShell";
 import AddEntryPage from "./pages/AddEntryPage";
+import BadgesPage from "./pages/BadgesPage";
 import CategoryBreakdownPage from "./pages/CategoryBreakdownPage";
 import DashboardPage from "./pages/DashboardPage";
 import LoadingPage from "./pages/LoadingPage";
 import SettingsPage from "./pages/SettingsPage";
 import TransactionsPage from "./pages/TransactionsPage";
+import WrapupPage from "./pages/WrapupPage";
 
 export default function App() {
   return (
@@ -17,6 +19,8 @@ export default function App() {
         <Route path="/add" element={<AddEntryPage />} />
         <Route path="/category-breakdown" element={<CategoryBreakdownPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/badges" element={<BadgesPage />} />
+        <Route path="/wrapup" element={<WrapupPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
