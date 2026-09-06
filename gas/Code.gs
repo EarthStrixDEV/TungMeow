@@ -144,17 +144,21 @@ function setupBudgetCapsTab(spreadsheet) {
 // Dispatch is handled by Router.handleRequest (Router.gs); response envelopes
 // are serialized by Utils.jsonResponse (Utils.gs).
 //
-// doGet is the ONLY path the MVP frontend uses, for all 8 actions including
-// addTransaction and syncNow — params arrive as URL query string via
-// e.parameter (GAS URL-decodes each field automatically, so description/note
-// values containing & # etc. arrive intact as long as the frontend encodes
-// them with URLSearchParams, which it does). This avoids the CORS preflight
-// that a cross-origin POST with a JSON body would trigger, which Apps Script
-// Web Apps cannot satisfy.
+// doGet handles every action EXCEPT ocrSlip — params arrive as URL query
+// string via e.parameter (GAS URL-decodes each field automatically, so
+// description/note values containing & # etc. arrive intact as long as the
+// frontend encodes them with URLSearchParams, which it does). This avoids
+// the CORS preflight that a cross-origin POST with a JSON body would
+// trigger, which Apps Script Web Apps cannot satisfy.
 //
-// doPost exists only as a defensive fallback (e.g. manual/non-browser
-// callers); it is NOT used by the frontend and no action's contract should
-// be designed around POST semantics.
+// doPost handles ONLY ocrSlip (Slip OCR + Auto-fill feature), sent with
+// Content-Type: text/plain so the browser treats it as a CORS "simple
+// request" and skips the OPTIONS preflight Apps Script Web Apps cannot
+// answer. e.postData.contents still contains the raw JSON body text
+// regardless of the text/plain content-type label — that header only
+// affects the browser's preflight decision, not how Apps Script
+// receives/parses the body. Every OTHER action must stay on GET — do not
+// migrate more actions to this path without re-reading this comment.
 
 function doGet(e) {
   return Utils.jsonResponse(Router.handleRequest(e.parameter || {}));

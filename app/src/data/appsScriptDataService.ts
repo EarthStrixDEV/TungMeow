@@ -5,6 +5,8 @@ import type {
   BudgetCap,
   ConnectionInfo,
   DashboardStats,
+  OcrSlipInput,
+  OcrSlipResult,
   Period,
   Transaction,
   TransactionPage,
@@ -14,12 +16,14 @@ import type {
 /**
  * Real Sheets-backed client — thin fetch wrapper over the Google Apps Script
  * Web App. Pure translation to/from the `DataService` contract; no business
- * logic lives here (that's all in SheetService.gs on the backend).
+ * logic lives here (that's all in SheetService.gs / AiService.gs on the
+ * backend).
  *
  * Transport: GET + query string for every action, including writes
  * (`addTransaction`, `deleteTransaction`, `syncNow`). Deliberate
  * CORS-avoidance decision — see gas/Router.gs's header comment for the full
- * rationale.
+ * rationale. `ocrSlip` is the sole exception (see `callOcr` below) — its
+ * base64 image/PDF payload can exceed practical URL length limits.
  */
 
 const BASE_URL = import.meta.env.VITE_APPS_SCRIPT_URL as string;
@@ -42,6 +46,33 @@ async function call<T>(action: string, params: Record<string, string | number | 
   }
 
   const res = await fetch(url.toString());
+  const text = await res.text();
+  const envelope = JSON.parse(text) as Envelope<T>;
+
+  if (!envelope.ok) {
+    throw new Error(envelope.error?.message ?? "Apps Script request failed");
+  }
+
+  return envelope.data;
+}
+
+/**
+ * POST-only path, used exclusively by ocrSlip. Sent with Content-Type:
+ * text/plain so the browser treats it as a CORS "simple request" and skips
+ * the OPTIONS preflight — Apps Script Web Apps cannot answer preflight
+ * requests. Every other action MUST stay on call<T>/GET; do not reuse this
+ * helper for anything else.
+ */
+async function callOcr<T>(action: string, body: Record<string, unknown>): Promise<T> {
+  if (!BASE_URL || !TOKEN) {
+    throw new Error("Apps Script backend is not configured: missing VITE_APPS_SCRIPT_URL/VITE_APPS_SCRIPT_TOKEN");
+  }
+
+  const res = await fetch(BASE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify({ action, token: TOKEN, ...body }),
+  });
   const text = await res.text();
   const envelope = JSON.parse(text) as Envelope<T>;
 
@@ -114,5 +145,9 @@ export const appsScriptDataService: DataService = {
 
   setBudgetCap(category: string, monthlyLimit: number) {
     return call<BudgetCap | null>("setBudgetCap", { category, monthlyLimit });
+  },
+
+  ocrSlip(input: OcrSlipInput) {
+    return callOcr<OcrSlipResult>("ocrSlip", { imageBase64: input.imageBase64, mimeType: input.mimeType });
   },
 };

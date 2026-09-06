@@ -5,6 +5,8 @@ import type {
   BudgetCap,
   ConnectionInfo,
   DashboardStats,
+  OcrSlipInput,
+  OcrSlipResult,
   Period,
   Transaction,
   TransactionPage,
@@ -18,6 +20,7 @@ const READ_DELAY_MS = 250;
 const WRITE_DELAY_MS = 500;
 const INIT_DELAY_MS = 1200;
 const DEFAULT_PAGE_SIZE = 25;
+const OCR_DELAY_MS = 1800; // gives the staged-progress UI time to show both captions
 
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -25,6 +28,13 @@ const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
 function parseISO(iso: string): Date {
   const [y, m, d] = iso.split("-").map(Number);
   return new Date(y, m - 1, d);
+}
+
+/** Local-timezone today as yyyy-mm-dd (toISOString would shift across UTC). */
+function todayLocal(): string {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 function rowNumber(id: string): number {
@@ -358,6 +368,45 @@ export const mockDataService: DataService = {
     const cap: BudgetCap = { category, monthlyLimit, createdAt: new Date().toISOString() };
     s.budgetCaps.push(cap);
     return { ...cap };
+  },
+
+  async ocrSlip(input: OcrSlipInput): Promise<OcrSlipResult> {
+    await ensureInit();
+    await delay(OCR_DELAY_MS);
+
+    // Dev-only toggles: prefix the base64 payload with a marker to exercise
+    // ocrSlip's other branches without a live backend (no real base64 starts
+    // with these strings, so this never collides with actual image bytes).
+    if (input.imageBase64.startsWith("MOCK_OCR_FAILED")) {
+      return {
+        amount: { value: null, confidence: "guessed" },
+        date: { value: null, confidence: "guessed" },
+        category: { value: "Other", confidence: "guessed" },
+        merchant: { value: null, confidence: "guessed" },
+        refNumber: null,
+        type: "expense",
+        isLikelyDuplicate: false,
+        duplicateOf: null,
+        ocrFailed: true,
+        failureReason: "อ่านสลิปไม่สำเร็จ ลองถ่ายรูปใหม่ให้ชัดขึ้นนะคะ",
+      };
+    }
+
+    const isDuplicate = input.imageBase64.startsWith("MOCK_OCR_DUPLICATE");
+
+    return {
+      amount: { value: 350, confidence: "high" },
+      date: { value: todayLocal(), confidence: "high" },
+      category: { value: "Food", confidence: "guessed" },
+      merchant: { value: "Uncle Moo's Noodle Shop", confidence: "high" },
+      refNumber: "20260905ABC12345",
+      type: "expense",
+      isLikelyDuplicate: isDuplicate,
+      duplicateOf: isDuplicate
+        ? { id: "Cash:2", date: "2026-09-04", amount: 350, note: "[Ref: 20260905ABC12345] paid to Uncle Moo's Noodle Shop" }
+        : null,
+      ocrFailed: false,
+    };
   },
 };
 

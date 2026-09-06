@@ -4,6 +4,8 @@ import type {
   BudgetCap,
   ConnectionInfo,
   DashboardStats,
+  OcrSlipInput,
+  OcrSlipResult,
   Period,
   Transaction,
   TransactionPage,
@@ -38,4 +40,13 @@ export interface DataService {
   getBudgetCaps(): Promise<BudgetCap[]>;
   /** monthlyLimit <= 0 deletes the cap for that category; returns null when deleted. */
   setBudgetCap(category: string, monthlyLimit: number): Promise<BudgetCap | null>;
+  /**
+   * Runs 2-stage OCR on an uploaded slip and returns a best-effort prefill
+   * result. Never throws for "couldn't read this slip" — that's expressed via
+   * `ocrFailed`/`failureReason` on the resolved value so callers always have a
+   * fallback path. Only throws for transport-level failures (network down,
+   * backend unreachable) — callers must catch and treat identically to
+   * `ocrFailed: true`.
+   */
+  ocrSlip(input: OcrSlipInput): Promise<OcrSlipResult>;
 }

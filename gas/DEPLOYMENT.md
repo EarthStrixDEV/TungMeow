@@ -50,9 +50,9 @@ https://docs.google.com/spreadsheets/d/1AbCDefGhIJkLmnOPQRstuVWXyz1234567890abcd
 2. เลือกโค้ด stub ทั้งหมดในตัว editor (Ctrl+A) แล้วลบทิ้ง
 3. เปิดไฟล์ `D:\My Second Brain\Project Dev\MeowTung\gas\Code.gs` บนเครื่องพี่เอิร์ธ คัดลอกเนื้อหาทั้งหมด แล้ววางแทนที่ในตัว editor
 
-### 3.2 ไฟล์ที่เหลือ 7 ไฟล์: `Router.gs`, `Utils.gs`, `Auth.gs`, `Cache.gs`, `Periods.gs`, `Categories.gs`, `SheetService.gs`
+### 3.2 ไฟล์ที่เหลือ 8 ไฟล์: `Router.gs`, `Utils.gs`, `Auth.gs`, `Cache.gs`, `Periods.gs`, `Categories.gs`, `SheetService.gs`, `AiService.gs`
 
-สำหรับแต่ละไฟล์ ทำซ้ำขั้นตอนนี้ (รวม 7 ไฟล์):
+สำหรับแต่ละไฟล์ ทำซ้ำขั้นตอนนี้ (รวม 8 ไฟล์):
 
 1. คลิกเครื่องหมาย **`+`** ข้างหัวข้อ **Files** ทางซ้าย
 2. เลือก **Script**
@@ -64,10 +64,11 @@ https://docs.google.com/spreadsheets/d/1AbCDefGhIJkLmnOPQRstuVWXyz1234567890abcd
    - `Periods`
    - `Categories`
    - `SheetService`
+   - `AiService`
 4. กด Enter เพื่อสร้างไฟล์
 5. ลบโค้ด default ที่ขึ้นมา (ถ้ามี) แล้วเปิดไฟล์ต้นฉบับที่ตรงกันจาก `D:\My Second Brain\Project Dev\MeowTung\gas\` (เช่น `Router.gs`) คัดลอกเนื้อหาทั้งหมด วางลงในไฟล์ที่สร้างใหม่นี้
 
-ทำจนครบทั้ง 7 ไฟล์ค่ะ
+ทำจนครบทั้ง 8 ไฟล์ค่ะ
 
 ### 3.3 ไฟล์ manifest `appsscript.json`
 
@@ -120,7 +121,11 @@ xK9mP2vQzR7wL4nT8jY3hF6cB1dS5gA0
 6. เปิด **Execution log** (ดูวิธีในขั้นตอนที่ 5 ด้านล่าง) จะเห็นค่า UUID เช่น `550e8400-e29b-41d4-a716-446655440000` — คัดลอกค่านี้ไปใส่ในช่อง **Value** ของ `API_TOKEN`
 7. ลบฟังก์ชัน `tempGenerateToken` ออกจาก `Code.gs` แล้วบันทึกอีกครั้ง (ไม่จำเป็นต้องเก็บไว้)
 
-6. หลังกรอกครบทั้ง 2 ค่า คลิก **Save script properties**
+6. คลิก **Add script property** อีกครั้งเพื่อเพิ่มค่าที่ 3 (สำหรับฟีเจอร์ Slip OCR + Auto-fill):
+   - **Property**: `TYPHOON_OCR_API_KEY`
+   - **Value**: API key จาก Typhoon OCR (SCB10X) — ขอได้จาก [Typhoon OCR developer portal](https://opentyphoon.ai/)
+
+7. หลังกรอกครบทั้ง 3 ค่า คลิก **Save script properties**
 
 ---
 
@@ -226,6 +231,20 @@ Backend นี้ deploy แบบ **Anyone** เข้าถึงได้ (ac
 ## อัปเดตโค้ด: เพิ่ม deleteTransaction
 
 รอบนี้มีไฟล์ `.gs` เปลี่ยน 2 ไฟล์: `SheetService.gs` และ `Router.gs` (เพิ่มฟังก์ชันลบรายการธุรกรรม) เปิด Apps Script editor ที่ผูกกับ Sheet เดิม แล้วแทนที่เนื้อหาทั้งหมดของไฟล์ `SheetService.gs` และ `Router.gs` ในนั้นด้วยเนื้อหาล่าสุดจาก `D:\My Second Brain\Project Dev\MeowTung\gas\SheetService.gs` และ `D:\My Second Brain\Project Dev\MeowTung\gas\Router.gs` บนเครื่องพี่เอิร์ธ (ไฟล์อื่นไม่ต้องแตะ) บันทึกด้วย Ctrl+S แล้ว **redeploy ตามขั้นตอน "New version" ที่อธิบายไว้ในกล่องคำเตือนท้ายข้อ 6 ด้านบน** — ไม่ต้องสร้าง deployment ใหม่ URL เดิมใช้ได้ต่อค่ะ
+
+---
+
+## อัปเดตโค้ด: เพิ่ม Slip OCR + Auto-fill Transaction
+
+รอบนี้มีไฟล์ `.gs` เปลี่ยน/เพิ่ม 3 ไฟล์: `AiService.gs` (**ไฟล์ใหม่** — ยังไม่มีในโปรเจกต์ Apps Script ของพี่เอิร์ธ ต้องสร้างตามขั้นตอนที่ 3.2 ด้านบนก่อน), `Router.gs`, `Code.gs`
+
+1. เปิด Apps Script editor ที่ผูกกับ Sheet เดิม
+2. สร้างไฟล์ `AiService` ใหม่ตามขั้นตอนที่ 3.2 ด้านบน (คลิก `+` → Script → พิมพ์ `AiService` ไม่ต้องมี `.gs`) แล้ววางเนื้อหาจาก `D:\My Second Brain\Project Dev\MeowTung\gas\AiService.gs`
+3. แทนที่เนื้อหาทั้งหมดของไฟล์ `Router.gs` และ `Code.gs` ในนั้นด้วยเนื้อหาล่าสุดจาก `D:\My Second Brain\Project Dev\MeowTung\gas\Router.gs` และ `D:\My Second Brain\Project Dev\MeowTung\gas\Code.gs` บนเครื่องพี่เอิร์ธ (ไฟล์อื่นไม่ต้องแตะ)
+4. เพิ่ม Script Property ใหม่ `TYPHOON_OCR_API_KEY` ตามขั้นตอนที่ 4 ด้านบน (ถ้ายังไม่ได้เพิ่ม)
+5. บันทึกด้วย Ctrl+S แล้ว **redeploy ตามขั้นตอน "New version" ที่อธิบายไว้ในกล่องคำเตือนท้ายข้อ 6 ด้านบน** — ไม่ต้องสร้าง deployment ใหม่ URL เดิมใช้ได้ต่อค่ะ
+
+> ⚠️ ฟีเจอร์นี้จะไม่ทำงานจนกว่าจะครบทั้ง 5 ขั้นตอนข้างบน โดยเฉพาะ Script Property `TYPHOON_OCR_API_KEY` — ถ้าลืมเพิ่ม ฟีเจอร์อัปโหลดสลิปจะ error ทันทีที่ใช้งานจริง (แม้ frontend จะ deploy ไปแล้วก็ตาม)
 
 ---
 

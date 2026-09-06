@@ -4,13 +4,19 @@ import Card from "../components/ui/Card";
 import AmountInput from "../features/add-entry/AmountInput";
 import CategoryChips from "../features/add-entry/CategoryChips";
 import TypeToggle from "../features/add-entry/TypeToggle";
+import SlipUploadButton from "../features/add-entry/SlipUploadButton";
+import OcrProgressIndicator from "../features/add-entry/OcrProgressIndicator";
+import OcrFieldBadge from "../features/add-entry/OcrFieldBadge";
 import {
   dataService,
   EXPENSE_CATEGORIES,
   INCOME_CATEGORIES,
   type Account,
+  type OcrSlipResult,
   type TransactionType,
 } from "../data";
+import { compressAndEncodeImage } from "../lib/imageCompression";
+import { notify, confirmPossibleDuplicateSlip } from "../lib/notifications";
 
 /** Local-timezone today as yyyy-mm-dd (toISOString would shift across UTC). */
 function todayLocal(): string {
@@ -38,6 +44,9 @@ export default function AddEntryPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [ocrStage, setOcrStage] = useState<"reading" | "structuring" | null>(null);
+  const [ocrResult, setOcrResult] = useState<OcrSlipResult | null>(null);
+
   useEffect(() => {
     let cancelled = false;
     dataService.listAccounts().then((list) => {
@@ -62,6 +71,60 @@ export default function AddEntryPage() {
 
   const canSave =
     !saving && parseFloat(amount) > 0 && category !== "" && accountId !== "";
+
+  function applyOcrResult(result: OcrSlipResult) {
+    setOcrResult(result);
+    if (result.amount.value != null) setAmount(String(result.amount.value));
+    if (result.date.value != null) setDate(String(result.date.value));
+    setType(result.type);
+
+    const pool = result.type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+    const validCategory = pool.some((c) => c.id === result.category.value);
+    setCategory(validCategory ? String(result.category.value) : "Other");
+
+    const parts: string[] = [];
+    if (result.refNumber) parts.push(`[Ref: ${result.refNumber}]`);
+    if (result.merchant.value) parts.push(`paid to ${result.merchant.value}`);
+    setNote(parts.join(" ").slice(0, 500)); // sync with SheetService's 500-char cap on note
+  }
+
+  const handleSlipUpload = async (file: File) => {
+    try {
+      setOcrStage("reading");
+      const { base64, mimeType } = await compressAndEncodeImage(file);
+      setOcrStage("structuring");
+      const result = await dataService.ocrSlip({ imageBase64: base64, mimeType });
+      setOcrStage(null);
+
+      if (result.ocrFailed) {
+        notify.error({
+          title: "Couldn't read this slip",
+          text: result.failureReason ?? "Please try again with a clearer photo.",
+        });
+        return;
+      }
+
+      if (result.isLikelyDuplicate && result.duplicateOf) {
+        const proceed = await confirmPossibleDuplicateSlip(result.duplicateOf);
+        if (!proceed) return;
+      }
+
+      applyOcrResult(result);
+    } catch {
+      setOcrStage(null);
+      notify.error({
+        title: "Couldn't read this slip",
+        text: "Please try again with a clearer photo.",
+      });
+    }
+  };
+
+  const handleClearOcr = () => {
+    setOcrResult(null);
+    setAmount("");
+    setDate(todayLocal());
+    setNote("");
+  };
 
   const handleSave = async () => {
     if (!canSave) return;
@@ -93,15 +156,31 @@ export default function AddEntryPage() {
       </header>
 
       <Card className="p-5 desktop:p-7 flex flex-col gap-5">
+        <SlipUploadButton onFileSelected={handleSlipUpload} disabled={ocrStage !== null} />
+        {ocrStage !== null && <OcrProgressIndicator stage={ocrStage} />}
+        {ocrResult && (
+          <button
+            type="button"
+            onClick={handleClearOcr}
+            className="self-start text-[12.5px] font-bold text-ink-soft underline decoration-dotted hover:text-ink"
+          >
+            Clear scanned data
+          </button>
+        )}
+
         <TypeToggle value={type} onChange={handleTypeChange} />
 
         <div>
-          <span className={labelClass}>Amount (฿)</span>
+          <span className={labelClass}>
+            Amount (฿) <OcrFieldBadge confidence={ocrResult?.amount.confidence ?? "high"} />
+          </span>
           <AmountInput value={amount} onChange={setAmount} />
         </div>
 
         <div>
-          <span className={labelClass}>Category</span>
+          <span className={labelClass}>
+            Category <OcrFieldBadge confidence={ocrResult?.category.confidence ?? "high"} />
+          </span>
           <CategoryChips categories={categories} selected={category} onSelect={setCategory} />
         </div>
 
@@ -122,7 +201,9 @@ export default function AddEntryPage() {
             </select>
           </div>
           <div className="flex-1">
-            <label className={labelClass} htmlFor="add-entry-date">Date</label>
+            <label className={labelClass} htmlFor="add-entry-date">
+              Date <OcrFieldBadge confidence={ocrResult?.date.confidence ?? "high"} />
+            </label>
             <input
               id="add-entry-date"
               type="date"

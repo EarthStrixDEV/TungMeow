@@ -72,3 +72,32 @@ export interface BudgetCap {
   monthlyLimit: number;
   createdAt: string;
 }
+
+/** One OCR-extracted field, tagged with how much to trust it. */
+export interface OcrFieldConfidence {
+  value: string | number | null;
+  confidence: "high" | "low" | "guessed";
+}
+
+export interface OcrSlipInput {
+  /** Base64-encoded image/PDF bytes, no "data:" URI prefix. */
+  imageBase64: string;
+  mimeType: string;
+}
+
+export interface OcrSlipResult {
+  amount: OcrFieldConfidence; // value: number | null
+  date: OcrFieldConfidence; // value: yyyy-mm-dd | null
+  /** value is always one of the 9 category enum strings, or "Other" if unmatched/guessed. */
+  category: OcrFieldConfidence;
+  merchant: OcrFieldConfidence; // value: payee/merchant name | null
+  /** Raw transaction reference, no "[Ref: ]" wrapper — caller composes the note prefix. */
+  refNumber: string | null;
+  type: TransactionType;
+  isLikelyDuplicate: boolean;
+  duplicateOf: { id: string; date: string; amount: number; note: string } | null;
+  /** true = OCR could not read the slip at all; caller must fall back to an empty manual form. */
+  ocrFailed: boolean;
+  /** User-facing message when ocrFailed is true. */
+  failureReason?: string;
+}

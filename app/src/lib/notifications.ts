@@ -48,6 +48,27 @@ export async function confirmDeleteTransaction() {
   return result.isConfirmed;
 }
 
+export async function confirmPossibleDuplicateSlip(duplicateOf: { date: string; amount: number; note: string }) {
+  const result = await Swal.fire({
+    title: "This might already be logged",
+    text: `Found a similar transaction on ${duplicateOf.date} for ฿${duplicateOf.amount}. Continue anyway?`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Continue anyway",
+    cancelButtonText: "Cancel",
+    reverseButtons: true,
+    focusCancel: true,
+    customClass: {
+      popup: "tungmeow-dialog",
+      confirmButton: "tungmeow-button tungmeow-button-danger",
+      cancelButton: "tungmeow-button tungmeow-button-quiet",
+    },
+    buttonsStyling: false,
+  });
+
+  return result.isConfirmed;
+}
+
 export async function confirmDisconnectSheet() {
   const result = await Swal.fire({
     title: "Disconnect Google Sheet?",

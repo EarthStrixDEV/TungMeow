@@ -5,14 +5,19 @@
 // only validates the token, dispatches on params.action, and normalizes
 // errors into the response envelope — it holds no Sheets-reading logic itself.
 //
-// Transport: the MVP frontend calls ALL 8 actions — including addTransaction
-// and syncNow — via doGet (query string params), never doPost. This is
-// deliberate: a cross-origin GET has no preflight, while a cross-origin POST
-// with a JSON body triggers an OPTIONS preflight that Apps Script Web Apps
-// cannot satisfy. Router.handleRequest is transport-agnostic (it just reads
-// flat params, regardless of source), and doPost is kept in Code.gs as a
-// defensive fallback only — do not design SheetService or the frontend
-// adapter around POST semantics for any action.
+// Transport: every action except ocrSlip is called via doGet (query string
+// params), never doPost. This is deliberate: a cross-origin GET has no
+// preflight, while a cross-origin POST with a JSON body triggers an OPTIONS
+// preflight that Apps Script Web Apps cannot satisfy. Router.handleRequest
+// is transport-agnostic (it just reads flat params, regardless of source).
+//
+// ocrSlip is the sole exception (Slip OCR + Auto-fill feature): its base64
+// image/PDF payload can exceed practical URL length limits, so it is sent
+// via doPost with Content-Type: text/plain — that content type makes the
+// browser treat the request as a CORS "simple request" and skip the OPTIONS
+// preflight GAS Web Apps can't answer. See Code.gs's doGet/doPost comment
+// for the full rationale. Do not design any OTHER action around POST
+// semantics — this exception is scoped to ocrSlip only.
 //
 // Response envelope shape:
 //   success: { ok: true, data: <payload> }
@@ -105,6 +110,16 @@ var Router = {
           return {
             ok: true,
             data: SheetService.setBudgetCap(params.category, Number(params.monthlyLimit)),
+          };
+
+        case "ocrSlip":
+          // Sole POST-transport action — see the header comment above and
+          // Code.gs's doPost. Never throws for "couldn't read this slip";
+          // AiService.ocrSlip resolves ocrFailed:true instead so this always
+          // returns { ok: true, data: ... }.
+          return {
+            ok: true,
+            data: AiService.ocrSlip(params.imageBase64, params.mimeType),
           };
 
         default:
