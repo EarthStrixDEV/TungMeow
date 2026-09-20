@@ -185,7 +185,7 @@ export default function AddEntryPage() {
         </div>
 
         <div className="flex flex-col desktop:flex-row gap-4">
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <label className={labelClass} htmlFor="add-entry-account">Account</label>
             <select
               id="add-entry-account"
@@ -200,7 +200,7 @@ export default function AddEntryPage() {
               ))}
             </select>
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <label className={labelClass} htmlFor="add-entry-date">
               Date <OcrFieldBadge confidence={ocrResult?.date.confidence ?? "high"} />
             </label>

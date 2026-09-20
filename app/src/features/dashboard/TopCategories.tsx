@@ -9,7 +9,7 @@ interface TopCategoriesProps {
 
 export default function TopCategories({ categories }: TopCategoriesProps) {
   return (
-    <Card className="flex-1 flex flex-col p-[16px_16px_8px] desktop:p-[22px_24px]">
+    <Card className="flex-1 min-w-0 flex flex-col p-[16px_16px_8px] desktop:p-[22px_24px]">
       <div className="flex items-center justify-between mb-3.5">
         <h3 className="text-[15.5px] font-extrabold">Top Categories</h3>
         <Link to="/category-breakdown" className="text-sm font-bold text-blue-deep">

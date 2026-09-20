@@ -35,6 +35,7 @@
 }
 
 @layer base {
+  html, body { @apply overflow-x-hidden; }
   body { @apply bg-bg text-ink font-body antialiased; }
   h1, h2, h3 { @apply font-display; }
 

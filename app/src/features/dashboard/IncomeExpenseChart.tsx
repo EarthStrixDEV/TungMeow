@@ -32,8 +32,8 @@ export default function IncomeExpenseChart({ chart, period }: IncomeExpenseChart
   const gridlines = [1, 2 / 3, 1 / 3, 0];
 
   return (
-    <Card className="flex-1 desktop:flex-[1.6] p-[16px_16px_8px] desktop:p-[22px_24px]">
-      <div className="flex items-center justify-between mb-1">
+    <Card className="flex-1 desktop:flex-[1.6] min-w-0 p-[16px_16px_8px] desktop:p-[22px_24px]">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 mb-1">
         <div>
           <h3 className="text-[15.5px] font-extrabold">Income vs Expense</h3>
           <p className="text-xs text-ink-soft">Last 6 {period}s</p>
@@ -49,7 +49,7 @@ export default function IncomeExpenseChart({ chart, period }: IncomeExpenseChart
           </span>
         </div>
       </div>
-      <svg viewBox="0 0 620 260" width="100%" className="mt-2.5">
+      <svg viewBox="0 0 620 260" width="100%" className="mt-2.5 block max-w-full">
         <line x1={AXIS_X} y1={CHART_TOP} x2={AXIS_X} y2={CHART_BOTTOM} stroke="var(--color-line)" strokeWidth="1" />
         <line x1={AXIS_X} y1={CHART_BOTTOM} x2={AXIS_RIGHT} y2={CHART_BOTTOM} stroke="var(--color-line)" strokeWidth="1" />
         {gridlines.map((f) => (

@@ -17,9 +17,15 @@ export default function StreakBadge({ streak }: StreakBadgeProps) {
   if (streak.lastLoggedDate === null) return null;
 
   const isToday = streak.lastLoggedDate === todayISO();
-  const copy = isToday
-    ? `🔥 ${streak.count}-day streak — keep it up!`
-    : `🔥 ${streak.count}-day streak — log today to keep it going!`;
 
-  return <Pill tone="orange">{copy}</Pill>;
+  return (
+    <Pill tone="orange">
+      <span className="whitespace-nowrap">
+        🔥 {streak.count}-day streak
+      </span>
+      <span className="hidden desktop:inline whitespace-nowrap">
+        {isToday ? " — keep it up!" : " — log today to keep it going!"}
+      </span>
+    </Pill>
+  );
 }

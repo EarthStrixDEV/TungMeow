@@ -45,7 +45,7 @@ export default function MascotCard({ balanceDeltaPct, period }: MascotCardProps)
   const mood = deriveMascotMood(balanceDeltaPct);
 
   return (
-    <Card className="p-[14px_16px] desktop:p-[20px_22px]">
+    <Card className="flex-1 min-w-0 p-[14px_16px] desktop:p-[20px_22px]">
       <div className="relative" ref={popoverRef}>
         <button
           type="button"

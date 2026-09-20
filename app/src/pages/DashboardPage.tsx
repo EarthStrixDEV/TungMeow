@@ -120,14 +120,14 @@ export default function DashboardPage() {
 
   return (
     <>
-      <header className="flex items-center justify-between">
+      <header className="flex flex-col desktop:flex-row desktop:items-center justify-between gap-2.5">
         <div>
           <h1 className="text-[22px] desktop:text-[26px] font-extrabold">Overview</h1>
           <p className="mt-1 text-sm text-ink-soft">
             {formatFullDate(new Date())} · All accounts
           </p>
         </div>
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center flex-wrap gap-2.5">
           {stats !== null && <StreakBadge streak={stats.streak} />}
           <Link
             to="/badges"
@@ -158,14 +158,14 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
-          <div className="flex flex-col desktop:flex-row gap-3 desktop:gap-[18px]">
+          <div className="flex flex-col desktop:flex-row gap-3 desktop:gap-[18px] min-w-0">
             <MascotCard balanceDeltaPct={stats.balanceDeltaPct} period={period} />
             <HealthScoreCard income={stats.income} expense={stats.expense} />
           </div>
 
           <AnomalyAlert anomalies={anomalies} />
 
-          <div className="flex flex-col desktop:flex-row gap-3 desktop:gap-[18px]">
+          <div className="flex flex-col desktop:flex-row gap-3 desktop:gap-[18px] min-w-0">
             <StatCard
               label="Balance"
               value={formatTHB(stats.balance)}
@@ -205,7 +205,7 @@ export default function DashboardPage() {
 
           <BudgetCapProgress budgetCaps={budgetCaps} categoryHistory={stats.categoryHistory} />
 
-          <div className="flex flex-col desktop:flex-row gap-4 desktop:gap-[18px]">
+          <div className="flex flex-col desktop:flex-row gap-4 desktop:gap-[18px] min-w-0">
             <IncomeExpenseChart chart={stats.chart} period={period} />
             <TopCategories categories={stats.topCategories} />
           </div>

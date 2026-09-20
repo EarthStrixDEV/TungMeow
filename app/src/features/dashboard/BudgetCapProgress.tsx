@@ -31,7 +31,7 @@ export default function BudgetCapProgress({ budgetCaps, categoryHistory }: Budge
   if (budgetCaps.length === 0) return null;
 
   return (
-    <Card className="flex-1 flex flex-col p-[16px_16px_8px] desktop:p-[22px_24px]">
+    <Card className="flex-1 min-w-0 flex flex-col p-[16px_16px_8px] desktop:p-[22px_24px]">
       <h3 className="text-[15.5px] font-extrabold mb-3.5">Budget Caps</h3>
       <div className="flex flex-col gap-3.5">
         {budgetCaps.map((cap) => {

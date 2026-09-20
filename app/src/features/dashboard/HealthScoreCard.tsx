@@ -54,7 +54,7 @@ export default function HealthScoreCard({ income, expense }: HealthScoreCardProp
   const status = deriveHealthStatus(income, expense);
 
   return (
-    <Card className="p-[14px_16px] desktop:p-[20px_22px]">
+    <Card className="flex-1 min-w-0 p-[14px_16px] desktop:p-[20px_22px]">
       <div className="relative" ref={popoverRef}>
         <button
           type="button"
